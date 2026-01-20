@@ -3,15 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Team Schedule Edit Pro</title>
+    <title>Team Schedule Sort Pro</title>
     <style>
         :root { --main: #2563eb; --bg: #f1f5f9; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #1e293b; }
-        header { background: white; padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
-        h1 { margin: 0; font-size: 1.1rem; color: var(--main); font-weight: 900; }
+        header { background: white; padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 10px rgba(0,0,0,0.05); }
+        h1 { margin: 0 0 10px 0; font-size: 1.1rem; color: var(--main); font-weight: 900; text-align: center; }
+
+        /* メンバーフィルター */
+        .filter-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
+        .filter-bar::-webkit-scrollbar { display: none; }
+        .filter-btn { flex: 0 0 auto; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; border: 2px solid #e2e8f0; background: white; color: #64748b; cursor: pointer; }
+        .filter-btn.active { border-color: var(--main); background: var(--main); color: white; }
+
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
 
-        .day-row { background: white; border-radius: 16px; margin-bottom: 10px; display: flex; align-items: stretch; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); min-height: 95px; scroll-margin-top: 80px; }
+        .day-row { background: white; border-radius: 16px; margin-bottom: 10px; display: flex; align-items: stretch; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); min-height: 95px; scroll-margin-top: 130px; }
         .day-row.is-today { outline: 3px solid var(--main); background: #f0f7ff; }
         
         .date-side { width: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; border-right: 1px solid #e2e8f0; }
@@ -21,23 +28,20 @@
         .date-day { font-size: 0.7rem; font-weight: bold; }
 
         .task-side { flex: 1; padding: 12px 15px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
-        .task-item { border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; cursor: pointer; transition: background 0.2s; border-radius: 8px; }
-        .task-item:active { background: #f1f5f9; }
+        .task-item { border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; cursor: pointer; }
         .task-item:last-child { border: none; }
-        .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; pointer-events: none; }
+        .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
         
         .cat-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; }
-        .cat-リハ { background: #10b981; }
-        .cat-GP { background: #f59e0b; }
-        .cat-本番 { background: #ef4444; }
+        .cat-リハ { background: #10b981; } .cat-GP { background: #f59e0b; } .cat-本番 { background: #ef4444; }
         
         .mem-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; }
         .mem-A { background: #e11d48; } .mem-B { background: #2563eb; } .mem-C { background: #059669; }
         .mem-D { background: #d97706; } .mem-E { background: #7c3aed; } .mem-F { background: #db2777; }
 
         .task-time { font-size: 0.85rem; font-weight: bold; color: #475569; }
-        .task-title { font-size: 1rem; font-weight: bold; display: block; margin: 2px 0; pointer-events: none; }
-        .task-loc { font-size: 0.8rem; color: #64748b; pointer-events: none; }
+        .task-title { font-size: 1rem; font-weight: bold; display: block; margin: 2px 0; }
+        .task-loc { font-size: 0.8rem; color: #64748b; }
 
         .fab { position: fixed; bottom: 25px; right: 25px; width: 64px; height: 64px; background: var(--main); color: white; border: none; border-radius: 50%; font-size: 32px; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 200; }
 
@@ -59,8 +63,16 @@
 <body>
 
 <header>
-    <h1>🎼 Team Schedule</h1>
-    <div id="month-label" style="font-weight: bold;"></div>
+    <h1>🎼 Team Schedule Sort</h1>
+    <div class="filter-bar" id="filter-bar">
+        <button class="filter-btn active" onclick="filterMems('ALL')">全員</button>
+        <button class="filter-btn" onclick="filterMems('A')">A</button>
+        <button class="filter-btn" onclick="filterMems('B')">B</button>
+        <button class="filter-btn" onclick="filterMems('C')">C</button>
+        <button class="filter-btn" onclick="filterMems('D')">D</button>
+        <button class="filter-btn" onclick="filterMems('E')">E</button>
+        <button class="filter-btn" onclick="filterMems('F')">F</button>
+    </div>
 </header>
 
 <div class="container" id="calendar-container"></div>
@@ -70,7 +82,6 @@
 <div class="modal" id="modal">
     <div class="modal-content">
         <h3 id="modal-title" style="margin-top:0; color:var(--main);">予定を登録</h3>
-        
         <label>参加メンバー</label>
         <div class="mem-selector">
             <label class="mem-opt"><input type="checkbox" name="mem" value="A"> A (赤)</label>
@@ -80,34 +91,24 @@
             <label class="mem-opt"><input type="checkbox" name="mem" value="E"> E (紫)</label>
             <label class="mem-opt"><input type="checkbox" name="mem" value="F"> F (桃)</label>
         </div>
-
-        <label>日付</label>
-        <input type="date" id="in-date">
-        
-        <label>開始時間 / 終了時間</label>
+        <label>日付</label><input type="date" id="in-date">
+        <label>時間</label>
         <div class="time-group">
             <select id="start-h"></select>:<select id="start-m"></select>
             〜
             <select id="end-h"></select>:<select id="end-m"></select>
         </div>
-
-        <label>カテゴリー</label>
-        <select id="in-cat"><option value="リハ">リハ</option><option value="GP">GP</option><option value="本番">本番</option></select>
-        
-        <input type="text" id="in-title" placeholder="内容">
-        <input type="text" id="in-loc" placeholder="場所">
-        
-        <div class="btn-group">
-            <button id="delete-btn" class="del-btn" onclick="deleteTask()">削除</button>
-            <button class="save-btn" onclick="save()">保存</button>
-        </div>
+        <label>カテゴリー</label><select id="in-cat"><option value="リハ">リハ</option><option value="GP">GP</option><option value="本番">本番</option></select>
+        <input type="text" id="in-title" placeholder="内容"><input type="text" id="in-loc" placeholder="場所">
+        <div class="btn-group"><button id="delete-btn" class="del-btn" onclick="deleteTask()">削除</button><button class="save-btn" onclick="save()">保存</button></div>
         <button onclick="openModal()" style="width:100%; background:none; border:none; color:#94a3b8; margin-top:15px;">キャンセル</button>
     </div>
 </div>
 
 <script>
-    const STORAGE_KEY = 'team_gig_editable_v1';
+    const STORAGE_KEY = 'team_gig_sort_v1';
     let editingId = null;
+    let currentFilter = 'ALL';
     
     function fillTimeSelect() {
         const ids = ['start-h', 'end-h', 'start-m', 'end-m'];
@@ -122,32 +123,34 @@
         }
     }
 
+    function filterMems(mem) {
+        currentFilter = mem;
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.innerText === (mem === 'ALL' ? '全員' : mem));
+        });
+        render();
+    }
+
     function openModal(taskId = null) {
         const m = document.getElementById('modal');
         const isOpen = m.style.display === 'flex';
         m.style.display = isOpen ? 'none' : 'flex';
-        
         if(!isOpen) {
             editingId = taskId;
             document.getElementById('modal-title').innerText = taskId ? "予定を編集" : "予定を登録";
             document.getElementById('delete-btn').style.display = taskId ? "block" : "none";
-            
             if(taskId) {
                 const task = JSON.parse(localStorage.getItem(STORAGE_KEY)).find(t => t.id === taskId);
                 document.getElementById('in-date').value = task.d;
                 document.getElementById('in-title').value = task.t;
                 document.getElementById('in-loc').value = task.loc;
                 document.getElementById('in-cat').value = task.cat;
-                const [sh, sm] = task.sTime.split(':');
-                const [eh, em] = task.eTime.split(':');
-                document.getElementById('start-h').value = sh;
-                document.getElementById('start-m').value = sm;
-                document.getElementById('end-h').value = eh;
-                document.getElementById('end-m').value = em;
+                const [sh, sm] = task.sTime.split(':'); const [eh, em] = task.eTime.split(':');
+                document.getElementById('start-h').value = sh; document.getElementById('start-m').value = sm;
+                document.getElementById('end-h').value = eh; document.getElementById('end-m').value = em;
                 document.querySelectorAll('input[name="mem"]').forEach(c => c.checked = task.mems.includes(c.value));
             } else {
-                document.getElementById('in-title').value = "";
-                document.getElementById('in-loc').value = "";
+                document.getElementById('in-title').value = ""; document.getElementById('in-loc').value = "";
                 document.querySelectorAll('input[name="mem"]').forEach(c => c.checked = false);
             }
         }
@@ -159,37 +162,25 @@
         const sTime = `${document.getElementById('start-h').value}:${document.getElementById('start-m').value}`;
         const eTime = `${document.getElementById('end-h').value}:${document.getElementById('end-m').value}`;
         const selectedMems = Array.from(document.querySelectorAll('input[name="mem"]:checked')).map(c => c.value);
-        
         if(!d || !t || selectedMems.length === 0) return alert("入力漏れがあります");
-        
         let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         const newTask = { d, t, sTime, eTime, loc:document.getElementById('in-loc').value, mems: selectedMems, cat: document.getElementById('in-cat').value, id: editingId || Date.now() };
-        
-        if(editingId) {
-            tasks = tasks.map(t => t.id === editingId ? newTask : t);
-        } else {
-            tasks.push(newTask);
-        }
-        
+        if(editingId) { tasks = tasks.map(t => t.id === editingId ? newTask : t); } else { tasks.push(newTask); }
         localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-        openModal();
-        render();
+        openModal(); render();
     }
 
     function deleteTask() {
-        if(!confirm("この予定を削除しますか？")) return;
+        if(!confirm("削除しますか？")) return;
         let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY));
         localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks.filter(t => t.id !== editingId)));
-        openModal();
-        render();
+        openModal(); render();
     }
 
     function render() {
-        const now = new Date();
-        const y = now.getFullYear(); const m = now.getMonth();
+        const now = new Date(); const y = now.getFullYear(); const m = now.getMonth();
         const tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         const todayStr = now.toISOString().split('T')[0];
-        document.getElementById('month-label').innerText = `${y}年 ${m + 1}月`;
         
         let html = '';
         const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
@@ -197,9 +188,15 @@
         for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
             const dateObj = new Date(y, m, d);
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const dayTasks = tasks.filter(t => t.d === dateStr).sort((a,b) => a.sTime.localeCompare(b.sTime));
-            const isToday = dateStr === todayStr;
+            let dayTasks = tasks.filter(t => t.d === dateStr);
+            
+            // フィルタリング処理
+            if(currentFilter !== 'ALL') {
+                dayTasks = dayTasks.filter(t => t.mems.includes(currentFilter));
+            }
+            dayTasks.sort((a,b) => a.sTime.localeCompare(b.sTime));
 
+            const isToday = dateStr === todayStr;
             html += `
                 <div id="day-${d}" class="day-row ${isToday ? 'is-today' : ''}">
                     <div class="date-side ${dateObj.getDay() === 0 ? 'sun' : (dateObj.getDay() === 6 ? 'sat' : '')}">
@@ -221,7 +218,7 @@
                 </div>`;
         }
         document.getElementById('calendar-container').innerHTML = html;
-        if(document.getElementById(`day-${now.getDate()}`)) {
+        if(currentFilter === 'ALL' && document.getElementById(`day-${now.getDate()}`)) {
             setTimeout(() => { document.getElementById(`day-${now.getDate()}`).scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 500);
         }
     }
