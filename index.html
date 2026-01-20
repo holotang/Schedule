@@ -3,62 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Team Gig Schedule</title>
+    <title>Team Schedule Pro</title>
     <style>
         :root { --main: #2563eb; --bg: #f1f5f9; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #1e293b; }
-        
         header { background: white; padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
         h1 { margin: 0; font-size: 1.1rem; color: var(--main); font-weight: 900; }
-
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
 
-        /* 縦型行レイアウト */
+        /* 行レイアウト */
         .day-row { background: white; border-radius: 16px; margin-bottom: 10px; display: flex; align-items: stretch; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); min-height: 90px; }
         .day-row.is-today { outline: 2px solid var(--main); }
-        
-        /* 日付部分 */
         .date-side { width: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; border-right: 1px solid #e2e8f0; }
         .date-side.sun { color: #ef4444; }
         .date-side.sat { color: #2563eb; }
         .date-num { font-size: 1.4rem; font-weight: 800; }
         .date-day { font-size: 0.7rem; font-weight: bold; }
 
-        /* 予定部分 */
         .task-side { flex: 1; padding: 12px 15px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
-        .task-item { border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; position: relative; }
+        .task-item { border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
         .task-item:last-child { border: none; }
-        
         .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
         
-        /* カテゴリータグ */
         .cat-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; }
         .cat-リハ { background: #10b981; }
         .cat-GP { background: #f59e0b; }
         .cat-本番 { background: #ef4444; }
         
-        /* メンバーカラータグ */
         .mem-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; }
-        .mem-A { background: #e11d48; } /* 赤 */
-        .mem-B { background: #2563eb; } /* 青 */
-        .mem-C { background: #059669; } /* 緑 */
-        .mem-D { background: #d97706; } /* オレンジ */
-        .mem-E { background: #7c3aed; } /* 紫 */
-        .mem-F { background: #db2777; } /* ピンク */
+        .mem-A { background: #e11d48; } .mem-B { background: #2563eb; } .mem-C { background: #059669; }
+        .mem-D { background: #d97706; } .mem-E { background: #7c3aed; } .mem-F { background: #db2777; }
 
         .task-time { font-size: 0.85rem; font-weight: bold; color: #475569; }
         .task-title { font-size: 1rem; font-weight: bold; display: block; margin: 2px 0; }
         .task-loc { font-size: 0.8rem; color: #64748b; }
 
-        /* FAB */
         .fab { position: fixed; bottom: 25px; right: 25px; width: 64px; height: 64px; background: var(--main); color: white; border: none; border-radius: 50%; font-size: 32px; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 200; }
 
-        /* モーダル */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .modal-content { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 24px; max-height: 90vh; overflow-y: auto; }
         input, select { width: 100%; padding: 12px; margin: 6px 0 12px 0; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 16px; background: #f8fafc; box-sizing: border-box; }
         label { font-size: 0.8rem; color: #64748b; font-weight: bold; }
-        .save-btn { width: 100%; background: var(--main); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; margin-top: 20px; font-size: 1rem; }
+        .time-select-group { display: flex; gap: 5px; align-items: center; margin-bottom: 12px; }
+        .save-btn { width: 100%; background: var(--main); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; margin-top: 10px; font-size: 1rem; }
     </style>
 </head>
 <body>
@@ -86,10 +73,13 @@
             <option value="F">メンバーF (桃)</option>
         </select>
 
-        <label>日付 / 時間</label>
-        <div style="display:flex; gap:10px;">
-            <input type="date" id="in-date" style="flex:2;">
-            <input type="time" id="in-time" style="flex:1;">
+        <label>日付</label>
+        <input type="date" id="in-date">
+        
+        <label>時間 (10分刻み)</label>
+        <div class="time-select-group">
+            <select id="in-hour" style="margin:0;"></select> 時
+            <select id="in-min" style="margin:0;"></select> 分
         </div>
         
         <label>カテゴリー</label>
@@ -109,8 +99,14 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'team_gig_v6';
+    const STORAGE_KEY = 'team_gig_v7_10min';
     
+    // 時間と分のセレクトボックスを生成
+    const hourSel = document.getElementById('in-hour');
+    for(let i=0; i<24; i++) hourSel.innerHTML += `<option value="${String(i).padStart(2,'0')}">${i}</option>`;
+    const minSel = document.getElementById('in-min');
+    for(let i=0; i<60; i+=10) minSel.innerHTML += `<option value="${String(i).padStart(2,'0')}">${i}</option>`;
+
     function openModal() {
         const m = document.getElementById('modal');
         m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
@@ -119,7 +115,9 @@
     function save() {
         const d = document.getElementById('in-date').value;
         const t = document.getElementById('in-title').value;
-        const time = document.getElementById('in-time').value;
+        const hour = document.getElementById('in-hour').value;
+        const min = document.getElementById('in-min').value;
+        const time = `${hour}:${min}`;
         const loc = document.getElementById('in-loc').value;
         const mem = document.getElementById('in-mem').value;
         if(!d || !t) return alert("日付と内容は必須です");
@@ -164,7 +162,7 @@
                                 <div class="task-meta">
                                     <span class="mem-tag mem-${t.mem}">${t.mem}</span>
                                     <span class="cat-tag cat-${t.cat}">${t.cat}</span>
-                                    <span class="task-time">${t.time || '--:--'}</span>
+                                    <span class="task-time">${t.time}</span>
                                 </div>
                                 <span class="task-title">${t.t}</span>
                                 ${t.loc ? `<div class="task-loc">📍 ${t.loc}</div>` : ''}
