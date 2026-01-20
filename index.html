@@ -40,7 +40,7 @@
         .task-time { font-size: 0.85rem; font-weight: bold; color: #3a3a3c; }
         .task-loc { font-size: 0.8rem; color: #8e8e93; }
 
-        .fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--main); color: white; border-radius: 50%; font-size: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: none; z-index: 200; cursor: pointer; }
+        .fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--main); color: white; border-radius: 50%; font-size: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: none; z-index: 200; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-content { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; max-height: 85vh; overflow-y: auto; }
@@ -112,15 +112,23 @@
     async function loadData() {
         showLoading(true);
         try {
-            const res = await fetch(GAS_URL);
+            // キャッシュ対策としてタイムスタンプを付与
+            const res = await fetch(`${GAS_URL}?t=${Date.now()}`);
             const raw = await res.json();
-            allTasks = raw.map(t => ({ 
-                d: t[0], t: t[1], sTime: t[2], eTime: t[3], 
-                loc: t[4], mems: String(t[5]).split(','), id: t[6], cat: t[7] 
-            }));
-            render();
+            
+            if (!raw || raw.length === 0) {
+                allTasks = [];
+                document.getElementById('calendar-container').innerHTML = '<div style="text-align:center; padding:50px; color:#ccc;">予定がありません</div>';
+            } else {
+                allTasks = raw.map(t => ({ 
+                    d: t[0], t: t[1], sTime: t[2], eTime: t[3], 
+                    loc: t[4], mems: String(t[5]).split(','), id: t[6], cat: t[7] 
+                }));
+                render();
+            }
         } catch (e) {
-            document.getElementById('calendar-container').innerHTML = "データ取得エラー。URLとデプロイ設定を確認してください。";
+            console.error(e);
+            document.getElementById('calendar-container').innerHTML = '<div style="text-align:center; padding:50px; color:red;">データ取得エラー</div>';
         }
         showLoading(false);
     }
@@ -142,17 +150,28 @@
             method: editingId ? "UPDATE" : "POST"
         };
 
-        await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) });
-        openModal();
-        await loadData();
+        try {
+            await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) });
+            openModal();
+            // 保存後に少し待ってから読み込む
+            setTimeout(loadData, 1000);
+        } catch (e) {
+            alert("保存に失敗しました。");
+            showLoading(false);
+        }
     }
 
     async function deleteTask() {
-        if(!confirm("削除しますか？")) return;
+        if(!confirm("この予定を削除しますか？")) return;
         showLoading(true);
-        await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ method: "DELETE", id: editingId }) });
-        openModal();
-        await loadData();
+        try {
+            await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ method: "DELETE", id: editingId }) });
+            openModal();
+            setTimeout(loadData, 1000);
+        } catch (e) {
+            alert("削除に失敗しました。");
+            showLoading(false);
+        }
     }
 
     function render() {
@@ -253,4 +272,3 @@
 </script>
 </body>
 </html>
-
