@@ -8,93 +8,79 @@
         :root { --main: #1a1a1a; --bg: #f2f2f7; --accent: #d4af37; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #1c1c1e; }
         header { background: #fff; padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 10px rgba(0,0,0,0.1); }
-        h1 { margin: 0; font-size: 1rem; text-align: center; }
+        h1 { margin: 0; font-size: 1rem; text-align: center; font-weight: 900; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
         .day-row { background: white; border-radius: 14px; margin-bottom: 12px; display: flex; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); min-height: 90px; }
-        .date-side { width: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f9f9fb; border-right: 1px solid #e5e5ea; font-weight: bold; }
-        .task-side { flex: 1; padding: 12px; }
-        .task-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-        .cat-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: white; background: #34c759; }
-        .task-title { font-size: 1rem; font-weight: bold; display: block; }
-        .task-time { font-size: 0.8rem; color: #3a3a3c; font-weight: bold; }
-        .fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--main); color: white; border-radius: 50%; font-size: 30px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .loading { text-align: center; padding: 50px; color: #888; }
+        .date-side { width: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f9f9fb; border-right: 1px solid #e5e5ea; font-weight: bold; flex-shrink: 0; }
+        .task-side { flex: 1; padding: 12px; display: flex; flex-direction: column; justify-content: center; }
+        .task-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+        .cat-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: white; background: #34c759; font-weight: bold; }
+        .task-title { font-size: 1rem; font-weight: bold; display: block; margin: 2px 0; }
+        .task-time { font-size: 0.85rem; color: #3a3a3c; font-weight: bold; }
+        .mem-info { font-size: 0.75rem; color: #8e8e93; margin-top: 4px; border-top: 1px solid #f2f2f7; padding-top: 4px; }
+        .fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--main); color: white; border-radius: 50%; font-size: 30px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 200; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
 <header><h1>東京フィルTbセクション</h1></header>
-<div class="container" id="calendar-container"><div class="loading">同期中...</div></div>
+<div class="container" id="calendar-container"><div style="text-align:center; padding:50px; color:#888;">同期中...</div></div>
 <button class="fab" onclick="document.getElementById('modal').style.display='flex'">＋</button>
 
-<div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:300; align-items:center; justify-content:center;">
-    <div style="background:white; width:85%; padding:20px; border-radius:20px;">
+<div id="modal" class="modal">
+    <div style="background:white; width:85%; max-width:400px; padding:25px; border-radius:20px;">
         <h3 style="margin-top:0;">予定登録</h3>
-        <input type="date" id="in-date" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
-        <input type="text" id="in-title" placeholder="内容" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
-        <button onclick="save()" style="width:100%; padding:15px; background:var(--main); color:white; border:none; border-radius:10px; font-weight:bold;">保存して共有</button>
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; background:none; border:none; margin-top:10px; color:#888;">閉じる</button>
+        <input type="date" id="in-date" style="width:100%; padding:12px; margin-bottom:10px; box-sizing:border-box; border:1px solid #ddd; border-radius:8px;">
+        <input type="text" id="in-title" placeholder="内容" style="width:100%; padding:12px; margin-bottom:10px; box-sizing:border-box; border:1px solid #ddd; border-radius:8px;">
+        <button onclick="save()" style="width:100%; padding:15px; background:var(--main); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">保存して共有</button>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; background:none; border:none; margin-top:10px; color:#888; cursor:pointer;">閉じる</button>
     </div>
 </div>
 
 <script>
-    // ※【ここを自分の最新URLに！】
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyBoguol75MsqhOF44U96ilu8Yjjiji2eNUinCwpFiwuZ62Vx2qquY1rbjIE0frmp8Wig/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxBw7VwDeNJsi_YtI4qY3Djl5CVZU0w8IgEQ4SUA5RIo4x4xiOwHqYhV9RSg8c3f772cw/exec"; 
 
     async function loadData() {
         try {
-            // 現在のスプシの並び順に合わせて読み込み
             const res = await fetch(`${GAS_URL}?t=${Date.now()}`);
-            const raw = await res.json();
+            const data = await res.json();
             let html = '';
             
-            if (!raw || raw.length === 0) {
-                html = '<div class="loading">予定がありません</div>';
+            if (!data || data.length === 0) {
+                html = '<div style="text-align:center; padding:50px; color:#888;">予定がありません</div>';
             } else {
-                raw.forEach(t => {
-                    const dateArr = t[0].split('-');
-                    const day = dateArr[2] || '';
+                data.forEach(t => {
+                    const day = t[0].split('-')[2] || t[0].split('/')[2];
                     html += `
                     <div class="day-row">
                         <div class="date-side">${day}</div>
                         <div class="task-side">
                             <div class="task-meta">
-                                <span class="cat-tag">${t[8] || '予定'}</span>
+                                <span class="cat-tag">${t[7] || '予定'}</span>
                                 <span class="task-time">${t[2]} - ${t[3]}</span>
                             </div>
                             <span class="task-title">${t[1]}</span>
-                            <div style="font-size:0.7rem; color:#888; margin-top:4px;">吹番: ${t[4]}, ${t[5]}, ${t[6]}</div>
+                            <div class="mem-info">吹番: ${t[5]}</div>
                         </div>
                     </div>`;
                 });
             }
             document.getElementById('calendar-container').innerHTML = html;
         } catch (e) {
-            document.getElementById('calendar-container').innerHTML = '<div class="loading">同期エラー：スプシの共有設定を確認</div>';
+            document.getElementById('calendar-container').innerHTML = '<div style="text-align:center; padding:50px; color:red;">同期エラーが発生しました</div>';
         }
     }
 
     async function save() {
         const d = document.getElementById('in-date').value;
         const t = document.getElementById('in-title').value;
-        if(!d || !t) return alert("入力してください");
+        if(!d || !t) return alert("日付と内容を入力してください");
         
-        document.getElementById('calendar-container').innerHTML = '<div class="loading">送信中...</div>';
-        
-        // スプシの列順に合わせたダミーデータを含む送信
-        const data = {
-            method: "POST",
-            d: d,
-            t: t,
-            sTime: "09:00",
-            eTime: "12:00",
-            loc: "リハ場",
-            mems: ["A", "B", "C"],
-            cat: "リハ",
-            id: Date.now()
-        };
+        document.getElementById('calendar-container').innerHTML = '<div style="text-align:center; padding:50px; color:#888;">保存中...</div>';
+        const payload = { method: "POST", d: d, t: t, sTime: "09:00", eTime: "12:00", loc: "", mems: ["Tb"], cat: "リハ", id: Date.now() };
 
-        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(data) });
+        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
         document.getElementById('modal').style.display = 'none';
         setTimeout(loadData, 2000);
     }
