@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>東京フィルTbセクション Sync</title>
+    <title>東京フィルTbセクション Sync Pro</title>
     <style>
         :root { --main: #1a1a1a; --bg: #f2f2f7; --accent: #d4af37; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #1c1c1e; }
@@ -51,7 +51,7 @@
 <div id="loading" class="loading-overlay">同期中...</div>
 
 <header>
-    <h1>東京フィルトロンボーンセクション</h1>
+    <h1>東京フィルTbセクション (Sync)</h1>
     <div class="filter-bar" id="filter-bar">
         <button class="filter-btn active" onclick="filterMems('ALL')">全員表示</button>
         <button class="filter-btn" onclick="filterMems('A')">A</button><button class="filter-btn" onclick="filterMems('B')">B</button><button class="filter-btn" onclick="filterMems('C')">C</button><button class="filter-btn" onclick="filterMems('D')">D</button><button class="filter-btn" onclick="filterMems('E')">E</button><button class="filter-btn" onclick="filterMems('F')">F</button>
@@ -96,9 +96,10 @@
     async function loadData() {
         showLoading(true);
         try {
-            // URLに現在時刻を混ぜることで、Googleに毎回新しいデータを読みに行かせます
-            const res = await fetch(`${GAS_URL}?t=${new Date().getTime()}`);
-            const raw = await res.json();
+            // URLの末尾にミリ秒単位のタイムスタンプを付与してキャッシュを強制破棄
+            const fetchUrl = `${GAS_URL}?t=${new Date().getTime()}`;
+            const response = await fetch(fetchUrl);
+            const raw = await response.json();
             
             if (!raw || raw.length === 0) {
                 allTasks = [];
@@ -111,7 +112,7 @@
                 render();
             }
         } catch (e) {
-            document.getElementById('calendar-container').innerHTML = '<div style="text-align:center; padding:50px; color:red;">データ読み込みエラー</div>';
+            document.getElementById('calendar-container').innerHTML = '<div style="text-align:center; padding:50px; color:red;">同期エラー</div>';
         }
         showLoading(false);
     }
@@ -132,26 +133,30 @@
             method: editingId ? "UPDATE" : "POST"
         };
         try {
-            // no-corsモードを回避するため、fetchの仕方を微調整
             await fetch(GAS_URL, { 
                 method: "POST", 
+                mode: "no-cors", 
                 body: JSON.stringify(data)
             });
             openModal();
-            setTimeout(loadData, 1000); 
+            // Google側への反映を待つため少し長めに待機
+            setTimeout(loadData, 2000); 
         } catch (e) {
-            // エラーが出ても実際には保存されていることが多いので再読み込み
-            openModal();
-            setTimeout(loadData, 1000);
+            alert("送信エラー。スプシを確認してください。");
+            showLoading(false);
         }
     }
 
     async function deleteTask() {
         if(!confirm("削除しますか？")) return;
         showLoading(true);
-        await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ method: "DELETE", id: editingId }) });
+        await fetch(GAS_URL, { 
+            method: "POST", 
+            mode: "no-cors", 
+            body: JSON.stringify({ method: "DELETE", id: editingId }) 
+        });
         openModal();
-        setTimeout(loadData, 1000);
+        setTimeout(loadData, 2000);
     }
 
     function render() {
