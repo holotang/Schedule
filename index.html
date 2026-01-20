@@ -73,7 +73,7 @@
         .order-badge { position: absolute; top: -6px; right: -6px; color: #000; border-radius: 4px; padding: 1px 4px; font-size: 8px; display: none; align-items: center; justify-content: center; font-weight: 900; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10; border: 1px solid #fff; }
         .mem-chip.selected .order-badge { display: flex; }
         
-        input, select { width: 100%; padding: 10px; margin: 4px 0; border: 1px solid #e5e5ea; border-radius: 10px; box-sizing: border-box; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 10px; margin: 4px 0; border: 1px solid #e5e5ea; border-radius: 8px; box-sizing: border-box; font-size: 0.9rem; }
         .save-btn { width: 100%; background: var(--main); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; margin-top: 10px; }
         .del-btn { background: #fff0f0; color: #ff3b30; margin-top: 8px; width: 100%; padding: 8px; border: none; border-radius: 10px; font-size: 0.8rem; display: none; }
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; font-weight: bold; }
@@ -191,11 +191,8 @@
         for(let d=1; d<=lastDay; d++) {
             const dateStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             let dayTasks = allTasks.filter(t => t.d.includes(dateStr));
-            
-            if(currentFilter !== 'ALL') {
-                dayTasks = dayTasks.filter(t => t.mems.includes(currentFilter));
-                if(dayTasks.length === 0) continue;
-            }
+            if(currentFilter !== 'ALL') dayTasks = dayTasks.filter(t => t.mems.includes(currentFilter));
+            if(dayTasks.length === 0 && currentFilter !== 'ALL') continue;
 
             html += `<div id="day-${d}" class="day-row ${dateStr === todayStr ? 'is-today' : ''}">
                 <div class="date-side ${new Date(y,m-1,d).getDay()===0?'sun':new Date(y,m-1,d).getDay()===6?'sat':''}">
@@ -204,9 +201,10 @@
                 <div class="task-side">
                     ${dayTasks.map(t => {
                         let segs = [];
-                        if(t.reheS && t.reheS!=="" && !t.reheS.includes("none")) segs.push({l:'リハ', s:t.reheS, e:t.reheE, c:'リハ'});
-                        if(t.gpS && t.gpS!=="" && !t.gpS.includes("none")) segs.push({l:'GP', s:t.gpS, e:t.gpE, c:'GP'});
-                        if(t.perfS && t.perfS!=="" && !t.perfS.includes("none")) segs.push({l:'本番', s:t.perfS, e:t.perfE, c:'本番'});
+                        // 判定条件を修正：文字が含まれており、かつ "--" (none) ではないものを抽出
+                        if(t.reheS && t.reheS !== "" && !t.reheS.includes("none")) segs.push({l:'リハ', s:t.reheS, e:t.reheE, c:'リハ'});
+                        if(t.gpS && t.gpS !== "" && !t.gpS.includes("none")) segs.push({l:'GP', s:t.gpS, e:t.gpE, c:'GP'});
+                        if(t.perfS && t.perfS !== "" && !t.perfS.includes("none")) segs.push({l:'本番', s:t.perfS, e:t.perfE, c:'本番'});
                         segs.sort((a,b) => a.s.localeCompare(b.s));
 
                         return `<div class="task-item" onclick="editModal('${t.id}')">
@@ -221,12 +219,6 @@
                 </div></div>`;
         }
         document.getElementById('calendar-container').innerHTML = html;
-    }
-
-    function filterMems(m) {
-        currentFilter = m;
-        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === (m === 'ALL' ? '全員' : m)));
-        render();
     }
 
     function syncAllFuture() {
@@ -246,11 +238,8 @@
         }
     }
 
-    function switchTimeTab(tab) {
-        document.querySelectorAll('.time-tab, .time-input-group').forEach(el => el.classList.remove('active'));
-        document.getElementById('tab-'+tab).classList.add('active'); document.getElementById('time-'+tab).classList.add('active');
-    }
-
+    function filterMems(m) { currentFilter = m; document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', btn.innerText===(m==='ALL'?'全員':m))); render(); }
+    function switchTimeTab(tab) { document.querySelectorAll('.time-tab, .time-input-group').forEach(el => el.classList.remove('active')); document.getElementById('tab-'+tab).classList.add('active'); document.getElementById('time-'+tab).classList.add('active'); }
     function clearTime(p) { document.getElementById(`${p}-s-h`).value = "none"; document.getElementById(`${p}-e-h`).value = "none"; }
 
     async function save() {
@@ -261,7 +250,7 @@
             return h==="none" ? ["",""] : [`${h}:${document.getElementById(p+'-s-m').value}`, `${eh}:${document.getElementById(p+'-e-m').value}`];
         };
         const r=getT('rehe'), g=getT('gp'), p=getT('perf'); showLoading(true);
-        const data = { d, t, id: editingId||Date.now(), loc: document.getElementById('in-loc').value, mems: selectedOrder, reheS: r[0], reheE: r[1], gpS: g[0], gpE: g[1], perfS: p[0], perfE: p[1], method: editingId?"UPDATE":"POST" };
+        const data = { d, t, id: editingId||Date.now(), loc: document.getElementById('in-loc').value, mems: selectedOrder, reheS: r[0], reheS: r[0], reheE: r[1], gpS: g[0], gpE: g[1], perfS: p[0], perfE: p[1], method: editingId?"UPDATE":"POST" };
         await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(data) }); openModal(); setTimeout(loadData, 1500);
     }
 
@@ -279,31 +268,10 @@
         document.getElementById('del-btn').style.display="block"; updateChips(); openModal(true);
     }
 
-    async function deleteTask() {
-        if(!confirm("削除しますか？")) return;
-        showLoading(true); await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ method: "DELETE", id: editingId }) });
-        openModal(); setTimeout(loadData, 1500);
-    }
-
-    function selectMem(mem) {
-        const idx = selectedOrder.indexOf(mem); if(idx > -1) selectedOrder.splice(idx, 1); else selectedOrder.push(mem);
-        updateChips();
-    }
-
-    function updateChips() {
-        document.querySelectorAll('.mem-chip').forEach(chip => {
-            const m = chip.id.replace('chip-', ''), i = selectedOrder.indexOf(m), b = chip.querySelector('.order-badge');
-            if(i > -1) { chip.classList.add('selected'); b.innerText = roles[i]||'Ex'; b.className = 'order-badge '+getRoleClass(roles[i]); b.style.display='flex'; }
-            else { chip.classList.remove('selected'); b.style.display='none'; }
-        });
-    }
-
-    function openModal(k=false) {
-        const m = document.getElementById('modal'); const isShow = m.style.display === 'flex';
-        m.style.display = isShow ? 'none' : 'flex';
-        if(!isShow && !k) { editingId = null; selectedOrder = []; ['rehe','gp','perf'].forEach(clearTime); document.getElementById('in-title').value = ""; document.getElementById('in-loc').value = ""; document.getElementById('del-btn').style.display = "none"; switchTimeTab('rehe'); updateChips(); }
-    }
-
+    async function deleteTask() { if(!confirm("削除しますか？")) return; showLoading(true); await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ method: "DELETE", id: editingId }) }); openModal(); setTimeout(loadData, 1500); }
+    function selectMem(mem) { const idx = selectedOrder.indexOf(mem); if(idx > -1) selectedOrder.splice(idx, 1); else selectedOrder.push(mem); updateChips(); }
+    function updateChips() { document.querySelectorAll('.mem-chip').forEach(chip => { const m = chip.id.replace('chip-', ''), i = selectedOrder.indexOf(m), b = chip.querySelector('.order-badge'); if(i > -1) { chip.classList.add('selected'); b.innerText = roles[i]||'Ex'; b.className = 'order-badge '+getRoleClass(roles[i]); b.style.display='flex'; } else { chip.classList.remove('selected'); b.style.display='none'; } }); }
+    function openModal(k=false) { const m = document.getElementById('modal'); const isShow = m.style.display === 'flex'; m.style.display = isShow ? 'none' : 'flex'; if(!isShow && !k) { editingId = null; selectedOrder = []; ['rehe','gp','perf'].forEach(clearTime); document.getElementById('in-title').value = ""; document.getElementById('in-loc').value = ""; document.getElementById('del-btn').style.display = "none"; switchTimeTab('rehe'); updateChips(); } }
     function showLoading(s) { document.getElementById('loading').style.display = s ? 'flex' : 'none'; }
     function changeMonth(d) { viewDate.setMonth(viewDate.getMonth() + d); render(); window.scrollTo(0,0); }
     function goToday() { viewDate = new Date(); viewDate.setDate(1); render(); setTimeout(scrollToToday, 100); }
@@ -312,7 +280,7 @@
     window.onload = () => {
         ['rehe','gp','perf'].forEach(p => {
             const sh = document.getElementById(`${p}-s-h`), eh = document.getElementById(`${p}-e-h`), sm = document.getElementById(`${p}-s-m`), em = document.getElementById(`${p}-e-m`);
-            sh.innerHTML = eh.innerHTML = '<option value="none">--</option>';
+            sh.innerHTML = eh.innerHTML = '<option value="none">??</option>';
             for(let i=0; i<=23; i++) { const v = String(i).padStart(2,'0'); sh.innerHTML += `<option value="${v}">${i}</option>`; eh.innerHTML += `<option value="${v}">${i}</option>`; }
             for(let i=0; i<60; i+=10) { const v = String(i).padStart(2,'0'); sm.innerHTML += `<option value="${v}">${v}</option>`; em.innerHTML += `<option value="${v}">${v}</option>`; }
         });
