@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Team Schedule Multi</title>
+    <title>Team Schedule Edit Pro</title>
     <style>
         :root { --main: #2563eb; --bg: #f1f5f9; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #1e293b; }
@@ -11,8 +11,9 @@
         h1 { margin: 0; font-size: 1.1rem; color: var(--main); font-weight: 900; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
 
-        .day-row { background: white; border-radius: 16px; margin-bottom: 10px; display: flex; align-items: stretch; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); min-height: 90px; }
-        .day-row.is-today { outline: 2px solid var(--main); }
+        .day-row { background: white; border-radius: 16px; margin-bottom: 10px; display: flex; align-items: stretch; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); min-height: 95px; scroll-margin-top: 80px; }
+        .day-row.is-today { outline: 3px solid var(--main); background: #f0f7ff; }
+        
         .date-side { width: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; border-right: 1px solid #e2e8f0; }
         .date-side.sun { color: #ef4444; }
         .date-side.sat { color: #2563eb; }
@@ -20,9 +21,10 @@
         .date-day { font-size: 0.7rem; font-weight: bold; }
 
         .task-side { flex: 1; padding: 12px 15px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
-        .task-item { border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .task-item { border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; cursor: pointer; transition: background 0.2s; border-radius: 8px; }
+        .task-item:active { background: #f1f5f9; }
         .task-item:last-child { border: none; }
-        .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; pointer-events: none; }
         
         .cat-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; }
         .cat-リハ { background: #10b981; }
@@ -34,22 +36,24 @@
         .mem-D { background: #d97706; } .mem-E { background: #7c3aed; } .mem-F { background: #db2777; }
 
         .task-time { font-size: 0.85rem; font-weight: bold; color: #475569; }
-        .task-title { font-size: 1rem; font-weight: bold; display: block; margin: 2px 0; }
-        .task-loc { font-size: 0.8rem; color: #64748b; }
+        .task-title { font-size: 1rem; font-weight: bold; display: block; margin: 2px 0; pointer-events: none; }
+        .task-loc { font-size: 0.8rem; color: #64748b; pointer-events: none; }
 
         .fab { position: fixed; bottom: 25px; right: 25px; width: 64px; height: 64px; background: var(--main); color: white; border: none; border-radius: 50%; font-size: 32px; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 200; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .modal-content { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 24px; max-height: 90vh; overflow-y: auto; }
         input, select { width: 100%; padding: 12px; margin: 6px 0 12px 0; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 16px; background: #f8fafc; box-sizing: border-box; }
-        label { font-size: 0.8rem; color: #64748b; font-weight: bold; }
+        label { font-size: 0.8rem; color: #64748b; font-weight: bold; display: block; margin-top: 10px; }
         
-        /* 複数選択チェックボックス */
         .mem-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 15px 0; }
-        .mem-opt { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; background: #f8fafc; padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; }
-        .mem-opt input { width: auto; margin: 0; }
+        .mem-opt { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; background: #f8fafc; padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; margin:0 !important; }
+        .time-group { display: flex; gap: 5px; align-items: center; }
+        .time-group select { flex: 1; margin: 5px 0; }
 
-        .save-btn { width: 100%; background: var(--main); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; margin-top: 10px; font-size: 1rem; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .save-btn { flex: 2; background: var(--main); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; font-size: 1rem; }
+        .del-btn { flex: 1; background: #fee2e2; color: #ef4444; border: none; padding: 16px; border-radius: 12px; font-weight: bold; font-size: 0.9rem; display: none; }
     </style>
 </head>
 <body>
@@ -65,9 +69,9 @@
 
 <div class="modal" id="modal">
     <div class="modal-content">
-        <h3 style="margin-top:0; color:var(--main);">予定を登録</h3>
+        <h3 id="modal-title" style="margin-top:0; color:var(--main);">予定を登録</h3>
         
-        <label>参加メンバー (複数選択可)</label>
+        <label>参加メンバー</label>
         <div class="mem-selector">
             <label class="mem-opt"><input type="checkbox" name="mem" value="A"> A (赤)</label>
             <label class="mem-opt"><input type="checkbox" name="mem" value="B"> B (青)</label>
@@ -80,120 +84,149 @@
         <label>日付</label>
         <input type="date" id="in-date">
         
-        <label>時間 (10分刻み)</label>
-        <div style="display:flex; gap:5px; align-items:center; margin-bottom:12px;">
-            <select id="in-hour" style="margin:0;"></select> 時
-            <select id="in-min" style="margin:0;"></select> 分
+        <label>開始時間 / 終了時間</label>
+        <div class="time-group">
+            <select id="start-h"></select>:<select id="start-m"></select>
+            〜
+            <select id="end-h"></select>:<select id="end-m"></select>
         </div>
-        
+
         <label>カテゴリー</label>
-        <select id="in-cat">
-            <option value="リハ">リハ</option>
-            <option value="GP">GP</option>
-            <option value="本番">本番</option>
-        </select>
+        <select id="in-cat"><option value="リハ">リハ</option><option value="GP">GP</option><option value="本番">本番</option></select>
         
-        <label>内容 / 場所</label>
         <input type="text" id="in-title" placeholder="内容">
         <input type="text" id="in-loc" placeholder="場所">
         
-        <button class="save-btn" onclick="save()">保存する</button>
-        <button onclick="openModal()" style="width:100%; background:none; border:none; color:#94a3b8; margin-top:15px;">閉じる</button>
+        <div class="btn-group">
+            <button id="delete-btn" class="del-btn" onclick="deleteTask()">削除</button>
+            <button class="save-btn" onclick="save()">保存</button>
+        </div>
+        <button onclick="openModal()" style="width:100%; background:none; border:none; color:#94a3b8; margin-top:15px;">キャンセル</button>
     </div>
 </div>
 
 <script>
-    const STORAGE_KEY = 'team_gig_multi_v1';
+    const STORAGE_KEY = 'team_gig_editable_v1';
+    let editingId = null;
     
-    const hourSel = document.getElementById('in-hour');
-    for(let i=0; i<24; i++) hourSel.innerHTML += `<option value="${String(i).padStart(2,'0')}">${i}</option>`;
-    const minSel = document.getElementById('in-min');
-    for(let i=0; i<60; i+=10) minSel.innerHTML += `<option value="${String(i).padStart(2,'0')}">${i}</option>`;
+    function fillTimeSelect() {
+        const ids = ['start-h', 'end-h', 'start-m', 'end-m'];
+        const [sh, eh, sm, em] = ids.map(id => document.getElementById(id));
+        for(let i=7; i<=22; i++) {
+            const opt = `<option value="${String(i).padStart(2,'0')}">${i}</option>`;
+            sh.innerHTML += opt; eh.innerHTML += opt;
+        }
+        for(let i=0; i<60; i+=10) {
+            const opt = `<option value="${String(i).padStart(2,'0')}">${i}</option>`;
+            sm.innerHTML += opt; em.innerHTML += opt;
+        }
+    }
 
-    function openModal() {
+    function openModal(taskId = null) {
         const m = document.getElementById('modal');
         const isOpen = m.style.display === 'flex';
         m.style.display = isOpen ? 'none' : 'flex';
+        
         if(!isOpen) {
-            document.querySelectorAll('input[name="mem"]').forEach(c => c.checked = false);
+            editingId = taskId;
+            document.getElementById('modal-title').innerText = taskId ? "予定を編集" : "予定を登録";
+            document.getElementById('delete-btn').style.display = taskId ? "block" : "none";
+            
+            if(taskId) {
+                const task = JSON.parse(localStorage.getItem(STORAGE_KEY)).find(t => t.id === taskId);
+                document.getElementById('in-date').value = task.d;
+                document.getElementById('in-title').value = task.t;
+                document.getElementById('in-loc').value = task.loc;
+                document.getElementById('in-cat').value = task.cat;
+                const [sh, sm] = task.sTime.split(':');
+                const [eh, em] = task.eTime.split(':');
+                document.getElementById('start-h').value = sh;
+                document.getElementById('start-m').value = sm;
+                document.getElementById('end-h').value = eh;
+                document.getElementById('end-m').value = em;
+                document.querySelectorAll('input[name="mem"]').forEach(c => c.checked = task.mems.includes(c.value));
+            } else {
+                document.getElementById('in-title').value = "";
+                document.getElementById('in-loc').value = "";
+                document.querySelectorAll('input[name="mem"]').forEach(c => c.checked = false);
+            }
         }
     }
 
     function save() {
         const d = document.getElementById('in-date').value;
         const t = document.getElementById('in-title').value;
-        const hour = document.getElementById('in-hour').value;
-        const min = document.getElementById('in-min').value;
-        const loc = document.getElementById('in-loc').value;
+        const sTime = `${document.getElementById('start-h').value}:${document.getElementById('start-m').value}`;
+        const eTime = `${document.getElementById('end-h').value}:${document.getElementById('end-m').value}`;
         const selectedMems = Array.from(document.querySelectorAll('input[name="mem"]:checked')).map(c => c.value);
-
-        if(!d || !t) return alert("日付と内容は必須です");
-        if(selectedMems.length === 0) return alert("メンバーを1人以上選択してください");
         
-        const tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        tasks.push({ d, t, time:`${hour}:${min}`, loc, mems: selectedMems, cat: document.getElementById('in-cat').value, id: Date.now() });
+        if(!d || !t || selectedMems.length === 0) return alert("入力漏れがあります");
+        
+        let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const newTask = { d, t, sTime, eTime, loc:document.getElementById('in-loc').value, mems: selectedMems, cat: document.getElementById('in-cat').value, id: editingId || Date.now() };
+        
+        if(editingId) {
+            tasks = tasks.map(t => t.id === editingId ? newTask : t);
+        } else {
+            tasks.push(newTask);
+        }
+        
         localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-        
+        openModal();
+        render();
+    }
+
+    function deleteTask() {
+        if(!confirm("この予定を削除しますか？")) return;
+        let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks.filter(t => t.id !== editingId)));
         openModal();
         render();
     }
 
     function render() {
         const now = new Date();
-        const y = now.getFullYear();
-        const m = now.getMonth();
-        const lastDate = new Date(y, m + 1, 0).getDate();
+        const y = now.getFullYear(); const m = now.getMonth();
         const tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         const todayStr = now.toISOString().split('T')[0];
-
         document.getElementById('month-label').innerText = `${y}年 ${m + 1}月`;
         
         let html = '';
         const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
 
-        for(let d=1; d<=lastDate; d++) {
+        for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
             const dateObj = new Date(y, m, d);
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const dayTasks = tasks.filter(t => t.d === dateStr).sort((a,b) => a.time.localeCompare(b.time));
-            const dayIdx = dateObj.getDay();
+            const dayTasks = tasks.filter(t => t.d === dateStr).sort((a,b) => a.sTime.localeCompare(b.sTime));
             const isToday = dateStr === todayStr;
 
             html += `
-                <div class="day-row ${isToday ? 'is-today' : ''}" onclick="dayAction('${dateStr}')">
-                    <div class="date-side ${dayIdx === 0 ? 'sun' : ''} ${dayIdx === 6 ? 'sat' : ''}">
-                        <span class="date-num">${d}</span>
-                        <span class="date-day">${dayNames[dayIdx]}</span>
+                <div id="day-${d}" class="day-row ${isToday ? 'is-today' : ''}">
+                    <div class="date-side ${dateObj.getDay() === 0 ? 'sun' : (dateObj.getDay() === 6 ? 'sat' : '')}">
+                        <span class="date-num">${d}</span><span class="date-day">${dayNames[dateObj.getDay()]}</span>
                     </div>
                     <div class="task-side">
                         ${dayTasks.map(t => `
-                            <div class="task-item">
+                            <div class="task-item" onclick="openModal(${t.id})">
                                 <div class="task-meta">
                                     ${t.mems.map(m => `<span class="mem-tag mem-${m}">${m}</span>`).join('')}
                                     <span class="cat-tag cat-${t.cat}">${t.cat}</span>
-                                    <span class="task-time">${t.time}</span>
+                                    <span class="task-time">${t.sTime}-${t.eTime}</span>
                                 </div>
                                 <span class="task-title">${t.t}</span>
                                 ${t.loc ? `<div class="task-loc">📍 ${t.loc}</div>` : ''}
                             </div>
                         `).join('') || '<span style="color:#cbd5e1; font-size:0.75rem;">No Schedule</span>'}
                     </div>
-                </div>
-            `;
+                </div>`;
         }
         document.getElementById('calendar-container').innerHTML = html;
-    }
-
-    function dayAction(dateStr) {
-        const tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        const dayTasks = tasks.filter(t => t.d === dateStr);
-        if(dayTasks.length > 0 && confirm(`${dateStr}の予定をすべて削除しますか？`)) {
-            const newTasks = tasks.filter(t => t.d !== dateStr);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(newTasks));
-            render();
+        if(document.getElementById(`day-${now.getDate()}`)) {
+            setTimeout(() => { document.getElementById(`day-${now.getDate()}`).scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 500);
         }
     }
 
-    window.onload = render;
+    window.onload = () => { fillTimeSelect(); render(); };
 </script>
 </body>
 </html>
