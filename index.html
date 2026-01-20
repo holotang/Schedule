@@ -3,37 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>東京フィルTbセクション Sync</title>
+    <title>東京フィルTb Sync Pro</title>
     <style>
         :root { --main: #1a1a1a; --bg: #f2f2f7; --accent: #d4af37; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #1c1c1e; }
-        header { background: #fff; padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 10px rgba(0,0,0,0.1); }
-        h1 { margin: 0 0 12px 0; font-size: 0.9rem; color: var(--main); font-weight: 900; text-align: center; }
+        
+        header { background: #fff; padding: 10px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 10px rgba(0,0,0,0.1); }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        h1 { margin: 0; font-size: 0.8rem; color: #8e8e93; font-weight: bold; }
+        .current-month-display { font-size: 1.3rem; font-weight: 900; color: var(--main); }
+
+        .month-nav { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 10px; background: #f2f2f7; padding: 5px; border-radius: 10px; }
+        .nav-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px 15px; border-radius: 8px; }
+        .nav-btn:active { background: #e5e5ea; }
+
         .filter-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
         .filter-bar::-webkit-scrollbar { display: none; }
         .filter-btn { flex: 0 0 auto; padding: 8px 16px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; border: 1px solid #d1d1d6; background: white; color: #8e8e93; cursor: pointer; }
         .filter-btn.active { border-color: var(--main); background: var(--main); color: white; }
-        .month-divider { padding: 15px 10px 5px 10px; font-size: 1.2rem; font-weight: 900; color: var(--main); display: flex; align-items: center; gap: 10px; }
-        .month-divider::after { content: ""; flex: 1; height: 1px; background: #d1d1d6; }
+
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
-        .day-row { background: white; border-radius: 14px; margin-bottom: 12px; display: flex; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); min-height: 100px; scroll-margin-top: 140px; }
+        .day-row { background: white; border-radius: 14px; margin-bottom: 12px; display: flex; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); min-height: 100px; scroll-margin-top: 160px; }
         .day-row.is-today { outline: 2px solid var(--accent); background: #fffdf5; }
+        
         .date-side { width: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f9f9fb; border-right: 1px solid #e5e5ea; flex-shrink: 0; }
         .date-side.sun { color: #ff3b30; } .date-side.sat { color: #007aff; }
         .date-num { font-size: 1.4rem; font-weight: 800; }
         .date-day { font-size: 0.7rem; font-weight: bold; }
-        .task-side { flex: 1; padding: 12px 15px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+
+        .task-side { flex: 1; padding: 12px 15px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
         .task-item { border-bottom: 1px solid #f2f2f7; padding-bottom: 8px; cursor: pointer; }
         .task-item:last-child { border: none; }
+        
         .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
-        .member-unit { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-        .role-label { font-size: 0.55rem; color: #8e8e93; font-weight: bold; }
-        .mem-tag { font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; color: white; font-weight: bold; background: #5856d6; }
-        .cat-tag { font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; color: white; font-weight: bold; }
-        .cat-リハ { background: #34c759; } .cat-GP { background: #ff9500; } .cat-本番 { background: #ff3b30; }
+        .member-unit { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+        .role-label { font-size: 0.5rem; color: #8e8e93; font-weight: bold; }
+        .mem-tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 6px; color: white; font-weight: bold; }
+        
+        /* 奏者ごとのカラー設定 */
+        .mem-辻󠄀 { background: #ff3b30; }   /* 赤 */
+        .mem-中西 { background: #007aff; }  /* 青 */
+        .mem-五箇 { background: #34c759; }  /* 緑 */
+        .mem-山内 { background: #ff9500; }  /* オレンジ */
+        .mem-藤田 { background: #af52de; }  /* 紫 */
+        .mem-石川 { background: #5856d6; }  /* 藍 */
+
+        .cat-tag { font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; }
+        .cat-リハ { background: #8e8e93; } .cat-GP { background: #d4af37; } .cat-本番 { background: #000; }
+
         .task-title { font-size: 1rem; font-weight: bold; display: block; }
         .task-time { font-size: 0.85rem; font-weight: bold; color: #3a3a3c; }
         .task-loc { font-size: 0.8rem; color: #8e8e93; }
+
         .fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--main); color: white; border-radius: 50%; font-size: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: none; z-index: 200; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-content { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; max-height: 85vh; overflow-y: auto; }
@@ -53,9 +74,19 @@
 <div id="loading" class="loading-overlay">同期中...</div>
 
 <header>
-    <h1>東京フィルトロンボーンセクション</h1>
+    <div class="header-top">
+        <h1>東京フィルTb Sync</h1>
+        <div class="current-month-display" id="head-month">2026年 1月</div>
+    </div>
+    
+    <div class="month-nav">
+        <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
+        <button class="nav-btn" onclick="goToday()">今日</button>
+        <button class="nav-btn" onclick="changeMonth(1)">▶</button>
+    </div>
+
     <div class="filter-bar" id="filter-bar">
-        <button class="filter-btn active" onclick="filterMems('ALL')">全員表示</button>
+        <button class="filter-btn active" onclick="filterMems('ALL')">全員</button>
         <button class="filter-btn" onclick="filterMems('辻󠄀')">辻󠄀</button>
         <button class="filter-btn" onclick="filterMems('中西')">中西</button>
         <button class="filter-btn" onclick="filterMems('五箇')">五箇</button>
@@ -65,7 +96,7 @@
     </div>
 </header>
 
-<div class="container" id="calendar-container">読み込み中...</div>
+<div class="container" id="calendar-container"></div>
 <button class="fab" onclick="openModal()">＋</button>
 
 <div class="modal" id="modal">
@@ -84,7 +115,7 @@
         <div style="display:flex; gap:5px;"><select id="start-h"></select>:<select id="start-m"></select> 〜 <select id="end-h"></select>:<select id="end-m"></select></div>
         <select id="in-cat"><option value="リハ">リハ</option><option value="GP">GP</option><option value="本番">本番</option></select>
         <input type="text" id="in-title" placeholder="内容"><input type="text" id="in-loc" placeholder="場所">
-        <button class="save-btn" onclick="save()">保存して全員に共有</button>
+        <button class="save-btn" onclick="save()">保存して共有</button>
         <button id="del-btn" class="del-btn" onclick="deleteTask()">削除</button>
         <button onclick="openModal()" style="width:100%; background:none; border:none; color:#8e8e93; margin-top:10px;">閉じる</button>
     </div>
@@ -98,6 +129,10 @@
     const roles = ["1st", "2nd", "Bass", "Ex1", "Ex2", "Ex3"];
     let allTasks = [];
     let currentFilter = 'ALL';
+    
+    // 表示中の年月を管理
+    let viewDate = new Date();
+    viewDate.setDate(1); // 1日に固定
 
     async function loadData() {
         showLoading(true);
@@ -105,34 +140,79 @@
             const res = await fetch(`${GAS_URL}?t=${new Date().getTime()}`);
             const raw = await res.json();
             
-            if (!raw || raw.length === 0) {
-                allTasks = [];
-                document.getElementById('calendar-container').innerHTML = '<div style="text-align:center; padding:50px; color:#ccc;">予定がありません</div>';
-            } else {
-                allTasks = raw.map(t => ({ 
-                    d: String(t[0]), t: String(t[1]), sTime: String(t[2]), eTime: String(t[3]), 
-                    loc: String(t[4]), mems: String(t[5]).split(','), id: String(t[6]), cat: String(t[7]) 
-                }));
-                render();
+            allTasks = raw ? raw.map(t => ({ 
+                d: String(t[0]), t: String(t[1]), sTime: String(t[2]), eTime: String(t[3]), 
+                loc: String(t[4]), mems: String(t[5]).split(','), id: String(t[6]), cat: String(t[7]) 
+            })) : [];
+            
+            render();
+            if (viewDate.getMonth() === new Date().getMonth()) {
                 scrollToToday();
             }
         } catch (e) {
-            document.getElementById('calendar-container').innerHTML = '<div style="text-align:center; padding:50px; color:red;">データ読み込みエラー</div>';
+            document.getElementById('calendar-container').innerHTML = '<div style="text-align:center; padding:50px; color:red;">読み込みエラー</div>';
         }
         showLoading(false);
     }
 
-    function scrollToToday() {
-        const now = new Date();
-        const d = now.getDate();
-        const m = now.getMonth() + 1;
-        const targetId = `day-${m}-${d}`;
-        const todayEl = document.getElementById(targetId);
-        if (todayEl) {
-            todayEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+    function changeMonth(diff) {
+        viewDate.setMonth(viewDate.getMonth() + diff);
+        render();
+        window.scrollTo(0, 0);
     }
 
+    function goToday() {
+        viewDate = new Date();
+        viewDate.setDate(1);
+        render();
+        setTimeout(scrollToToday, 100);
+    }
+
+    function scrollToToday() {
+        const now = new Date();
+        const targetId = `day-${now.getDate()}`;
+        const todayEl = document.getElementById(targetId);
+        if (todayEl) todayEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function render() {
+        const y = viewDate.getFullYear();
+        const m = viewDate.getMonth() + 1;
+        document.getElementById('head-month').innerText = `${y}年 ${m}月`;
+        
+        const now = new Date();
+        const todayComp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+        let html = '';
+        
+        const lastDay = new Date(y, m, 0).getDate();
+        for(let d=1; d<=lastDay; d++) {
+            const dateStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            let dayTasks = allTasks.filter(t => t.d.includes(dateStr)).sort((a,b) => a.sTime.localeCompare(b.sTime));
+            
+            if(currentFilter !== 'ALL') {
+                dayTasks = dayTasks.filter(t => t.mems.includes(currentFilter));
+                if(dayTasks.length === 0) continue;
+            }
+
+            html += `<div id="day-${d}" class="day-row ${dateStr === todayComp ? 'is-today' : ''}">
+                <div class="date-side ${new Date(y, m-1, d).getDay() === 0 ? 'sun' : (new Date(y, m-1, d).getDay() === 6 ? 'sat' : '')}">
+                    <span class="date-num">${d}</span><span class="date-day">${dayNames[new Date(y,m-1,d).getDay()]}</span>
+                </div>
+                <div class="task-side">
+                    ${dayTasks.map(t => `<div class="task-item" onclick="editModal('${t.id}')">
+                        <div class="task-meta">
+                            ${t.mems.map((name,i) => `<div class="member-unit"><span class="role-label">${roles[i] || 'Ex'}</span><span class="mem-tag mem-${name}">${name}</span></div>`).join('')}
+                            <span class="cat-tag cat-${t.cat}">${t.cat}</span><span class="task-time">${t.sTime}-${t.eTime}</span>
+                        </div>
+                        <span class="task-title">${t.t}</span>${t.loc && t.loc !== 'undefined' ? `<div class="task-loc">📍 ${t.loc}</div>` : ''}
+                    </div>`).join('') || '<span style="color:#ccc; font-size:0.75rem;">No Gigs</span>'}
+                </div></div>`;
+        }
+        document.getElementById('calendar-container').innerHTML = html;
+    }
+
+    // --- 以下、既存の保存・モーダル等のロジック ---
     async function save() {
         const d = document.getElementById('in-date').value;
         const t = document.getElementById('in-title').value;
@@ -164,54 +244,6 @@
         await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ method: "DELETE", id: editingId }) });
         openModal();
         setTimeout(loadData, 1500);
-    }
-
-    function render() {
-        const now = new Date();
-        const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-        let html = '';
-        
-        // スプシにある全データからユニークな「年月」を抽出
-        const months = [...new Set(allTasks.map(t => {
-            const dt = new Date(t.d);
-            return `${dt.getFullYear()}-${dt.getMonth() + 1}`;
-        }))].sort();
-
-        // もしデータがなければ今月を表示
-        if (months.length === 0) months.push(`${now.getFullYear()}-${now.getMonth() + 1}`);
-
-        months.forEach(monthStr => {
-            const [y, m] = monthStr.split('-').map(Number);
-            html += `<div class="month-divider">${y}年 ${m}月</div>`;
-            
-            const lastDay = new Date(y, m, 0).getDate();
-            for(let d=1; d<=lastDay; d++) {
-                const dateStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const todayComp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-                
-                let dayTasks = allTasks.filter(t => t.d.includes(dateStr)).sort((a,b) => a.sTime.localeCompare(b.sTime));
-                
-                if(currentFilter !== 'ALL') {
-                    dayTasks = dayTasks.filter(t => t.mems.includes(currentFilter));
-                    if(dayTasks.length === 0) continue;
-                }
-
-                html += `<div id="day-${m}-${d}" class="day-row ${dateStr === todayComp ? 'is-today' : ''}">
-                    <div class="date-side ${new Date(y, m-1, d).getDay() === 0 ? 'sun' : (new Date(y, m-1, d).getDay() === 6 ? 'sat' : '')}">
-                        <span class="date-num">${d}</span><span class="date-day">${dayNames[new Date(y,m-1,d).getDay()]}</span>
-                    </div>
-                    <div class="task-side">
-                        ${dayTasks.map(t => `<div class="task-item" onclick="editModal('${t.id}')">
-                            <div class="task-meta">
-                                ${t.mems.map((m,i) => `<div class="member-unit"><span class="role-label">${roles[i] || 'Ex'}</span><span class="mem-tag">${m}</span></div>`).join('')}
-                                <span class="cat-tag cat-${t.cat}">${t.cat}</span><span class="task-time">${t.sTime}-${t.eTime}</span>
-                            </div>
-                            <span class="task-title">${t.t}</span>${t.loc && t.loc !== 'undefined' ? `<div class="task-loc">📍 ${t.loc}</div>` : ''}
-                        </div>`).join('') || '<span style="color:#ccc; font-size:0.75rem;">No Gigs</span>'}
-                    </div></div>`;
-            }
-        });
-        document.getElementById('calendar-container').innerHTML = html;
     }
 
     function editModal(id) {
@@ -264,7 +296,7 @@
 
     function filterMems(mem) {
         currentFilter = mem;
-        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === (mem === 'ALL' ? '全員表示' : mem)));
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === (mem === 'ALL' ? '全員' : mem)));
         render();
     }
 
