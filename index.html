@@ -67,11 +67,9 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-content { background: white; width: 90%; max-width: 400px; padding: 20px; border-radius: 20px; max-height: 85vh; overflow-y: auto; }
         
-        /* 3タブのスタイル */
         .time-tabs { display: flex; gap: 2px; margin: 12px 0 8px 0; border-bottom: 1px solid #e5e5ea; }
         .time-tab { flex: 1; padding: 8px 2px; text-align: center; font-size: 0.7rem; font-weight: bold; color: #8e8e93; cursor: pointer; border-radius: 6px 6px 0 0; }
         .time-tab.active { color: var(--main); border-bottom: 2px solid var(--main); background: #f2f2f7; }
-        .time-tab.has-data { color: var(--accent); }
         .time-input-group { background: #f2f2f7; padding: 10px; border-radius: 8px; display: none; }
         .time-input-group.active { display: block; }
 
@@ -93,7 +91,7 @@
 <header>
     <div class="header-top">
         <h1>東京フィルTb Sync</h1>
-        <div class="current-month-display" id="head-month">2026年 1月</div>
+        <div class="current-month-display" id="head-month"></div>
     </div>
     <div class="month-nav">
         <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
@@ -129,25 +127,25 @@
         </div>
 
         <div id="time-rehe" class="time-input-group active">
-            <label class="input-label" style="font-size:0.6rem; color:#888;">リハの時間</label>
+            <label style="font-size:0.6rem; color:#888;">リハの時間</label>
             <div style="display:flex; gap:3px; align-items:center;">
-                <select id="rehe-s-h"></select>:<select id="rehe-s-m"></select> 〜 <select id="rehe-e-h"></select>:<select id="rehe-e-m"></select>
+                <select id="rehe-s-h" class="h-sel"></select>:<select id="rehe-s-m" class="m-sel"></select> 〜 <select id="rehe-e-h" class="h-sel"></select>:<select id="rehe-e-m" class="m-sel"></select>
             </div>
             <button onclick="clearTime('rehe')" style="width:100%; background:none; border:none; color:#ff3b30; font-size:0.6rem; margin-top:5px;">リハ設定を解除</button>
         </div>
 
         <div id="time-gp" class="time-input-group">
-            <label class="input-label" style="font-size:0.6rem; color:#888;">GPの時間</label>
+            <label style="font-size:0.6rem; color:#888;">GPの時間</label>
             <div style="display:flex; gap:3px; align-items:center;">
-                <select id="gp-s-h"></select>:<select id="gp-s-m"></select> 〜 <select id="gp-e-h"></select>:<select id="gp-e-m"></select>
+                <select id="gp-s-h" class="h-sel"></select>:<select id="gp-s-m" class="m-sel"></select> 〜 <select id="gp-e-h" class="h-sel"></select>:<select id="gp-e-m" class="m-sel"></select>
             </div>
             <button onclick="clearTime('gp')" style="width:100%; background:none; border:none; color:#ff3b30; font-size:0.6rem; margin-top:5px;">GP設定を解除</button>
         </div>
 
         <div id="time-perf" class="time-input-group">
-            <label class="input-label" style="font-size:0.6rem; color:#888;">本番の時間</label>
+            <label style="font-size:0.6rem; color:#888;">本番の時間</label>
             <div style="display:flex; gap:3px; align-items:center;">
-                <select id="perf-s-h"></select>:<select id="perf-s-m"></select> 〜 <select id="perf-e-h"></select>:<select id="perf-e-m"></select>
+                <select id="perf-s-h" class="h-sel"></select>:<select id="perf-s-m" class="m-sel"></select> 〜 <select id="perf-e-h" class="h-sel"></select>:<select id="perf-e-m" class="m-sel"></select>
             </div>
             <button onclick="clearTime('perf')" style="width:100%; background:none; border:none; color:#ff3b30; font-size:0.6rem; margin-top:5px;">本番設定を解除</button>
         </div>
@@ -192,7 +190,6 @@
         try {
             const res = await fetch(`${GAS_URL}?t=${new Date().getTime()}`);
             const raw = await res.json();
-            // スプシ構造：[0日付, 1タイトル, 2リハ開始, 3リハ終了, 4場所, 5奏者, 6ID, 7GP開始, 8GP終了, 9本番開始, 10本番終了]
             allTasks = raw ? raw.map(t => ({ 
                 d: String(t[0]), t: String(t[1]),
                 reheS: String(t[2] || ""), reheE: String(t[3] || ""),
@@ -202,7 +199,7 @@
             })) : [];
             render();
             if (viewDate.getMonth() === new Date().getMonth()) scrollToToday();
-        } catch (e) { document.getElementById('calendar-container').innerHTML = 'エラー'; }
+        } catch (e) { console.error(e); }
         showLoading(false);
     }
 
@@ -219,34 +216,27 @@
         const now = new Date(); const todayComp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
         const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
         let html = '';
-        
         const lastDay = new Date(y, m, 0).getDate();
         for(let d=1; d<=lastDay; d++) {
             const dateStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             let dayTasks = allTasks.filter(t => t.d.includes(dateStr));
             if(currentFilter !== 'ALL') dayTasks = dayTasks.filter(t => t.mems.includes(currentFilter));
             if(dayTasks.length === 0 && currentFilter !== 'ALL') continue;
-
             html += `<div id="day-${d}" class="day-row ${dateStr === todayComp ? 'is-today' : ''}">
                 <div class="date-side ${new Date(y, m-1, d).getDay() === 0 ? 'sun' : (new Date(y, m-1, d).getDay() === 6 ? 'sat' : '')}">
                     <span class="date-num">${d}</span><span class="date-day">${dayNames[new Date(y,m-1,d).getDay()]}</span>
                 </div>
                 <div class="task-side">
                     ${dayTasks.map(t => {
-                        let segments = [];
-                        if(t.reheS && t.reheS !== "none:00") segments.push({ label: 'リハ', s: t.reheS, e: t.reheE, cat: 'リハ' });
-                        if(t.gpS && t.gpS !== "none:00") segments.push({ label: 'GP', s: t.gpS, e: t.gpE, cat: 'GP' });
-                        if(t.perfS && t.perfS !== "none:00") segments.push({ label: '本番', s: t.perfS, e: t.perfE, cat: '本番' });
-                        segments.sort((a,b) => a.s.localeCompare(b.s));
-
+                        let segs = [];
+                        if(t.reheS && t.reheS !== "" && !t.reheS.includes("none")) segs.push({ label: 'リハ', s: t.reheS, e: t.reheE, cat: 'リハ' });
+                        if(t.gpS && t.gpS !== "" && !t.gpS.includes("none")) segs.push({ label: 'GP', s: t.gpS, e: t.gpE, cat: 'GP' });
+                        if(t.perfS && t.perfS !== "" && !t.perfS.includes("none")) segs.push({ label: '本番', s: t.perfS, e: t.perfE, cat: '本番' });
+                        segs.sort((a,b) => a.s.localeCompare(b.s));
                         return `<div class="task-item" onclick="editModal('${t.id}')">
-                            <div class="task-meta">
-                                ${t.mems.map((name,i) => `<div class="member-unit"><span class="role-label ${getRoleClass(roles[i])}">${roles[i] || 'Ex'}</span><span class="mem-tag mem-${name}">${name}</span></div>`).join('')}
-                            </div>
+                            <div class="task-meta">${t.mems.map((name,i) => `<div class="member-unit"><span class="role-label ${getRoleClass(roles[i])}">${roles[i] || 'Ex'}</span><span class="mem-tag mem-${name}">${name}</span></div>`).join('')}</div>
                             <span class="task-title">${t.t}</span>
-                            <div class="time-row-container">
-                                ${segments.map(sm => `<div class="task-time-row"><span class="cat-tag cat-${sm.cat}">${sm.label}</span>${sm.s}-${sm.e}</div>`).join('')}
-                            </div>
+                            <div class="time-row-container">${segs.map(s => `<div class="task-time-row"><span class="cat-tag cat-${s.cat}">${s.label}</span>${s.s}-${s.e}</div>`).join('')}</div>
                             ${t.loc && t.loc !== 'undefined' ? `<div class="task-loc">📍 ${t.loc}</div>` : ''}
                         </div>`
                     }).join('') || '<span style="color:#ccc; font-size:0.75rem;">No Gigs</span>'}
@@ -255,31 +245,33 @@
         document.getElementById('calendar-container').innerHTML = html;
     }
 
+    function initTime(prefix) {
+        document.getElementById(`${prefix}-s-h`).value = "12";
+        document.getElementById(`${prefix}-s-m`).value = "00";
+        document.getElementById(`${prefix}-e-h`).value = "12";
+        document.getElementById(`${prefix}-e-m`).value = "00";
+    }
+
+    function clearTime(prefix) {
+        document.getElementById(`${prefix}-s-h`).value = "none";
+        document.getElementById(`${prefix}-e-h`).value = "none";
+    }
+
     async function save() {
         const d = document.getElementById('in-date').value;
         const t = document.getElementById('in-title').value;
-        if(!d || !t || selectedOrder.length === 0) return alert("入力内容を確認してください");
-        
-        const getData = (prefix) => {
-            const h = document.getElementById(`${prefix}-s-h`).value;
-            const m = document.getElementById(`${prefix}-s-m`).value;
-            const eh = document.getElementById(`${prefix}-e-h`).value;
-            const em = document.getElementById(`${prefix}-e-m`).value;
-            return h === "none" ? "" : [`${h}:${m}`, `${eh}:${em}`];
+        if(!d || !t || selectedOrder.length === 0) return alert("内容を入力してください");
+        const getT = (p) => {
+            const h = document.getElementById(`${p}-s-h`).value;
+            const eh = document.getElementById(`${p}-e-h`).value;
+            if(h === "none" || eh === "none") return ["",""];
+            return [`${h}:${document.getElementById(`${p}-s-m`).value}`, `${eh}:${document.getElementById(`${p}-e-m`).value}`];
         };
-
-        const rehe = getData('rehe');
-        const gp = getData('gp');
-        const perf = getData('perf');
-
-        if(!rehe && !gp && !perf) return alert("時間を設定してください");
-
+        const r = getT('rehe'), g = getT('gp'), p = getT('perf');
         showLoading(true);
         const data = {
             d, t, id: editingId || Date.now(), loc: document.getElementById('in-loc').value, mems: selectedOrder,
-            reheS: rehe ? rehe[0] : "", reheE: rehe ? rehe[1] : "",
-            gpS: gp ? gp[0] : "", gpE: gp ? gp[1] : "",
-            perfS: perf ? perf[0] : "", perfE: perf ? perf[1] : "",
+            reheS: r[0], reheE: r[1], gpS: g[0], gpE: g[1], perfS: p[0], perfE: p[1],
             method: editingId ? "UPDATE" : "POST"
         };
         try { await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(data) }); openModal(); setTimeout(loadData, 1500); } catch (e) { alert("失敗"); showLoading(false); }
@@ -291,19 +283,16 @@
         document.getElementById('in-date').value = t.d;
         document.getElementById('in-title').value = t.t;
         document.getElementById('in-loc').value = t.loc === 'undefined' ? '' : t.loc;
-        
-        const setTime = (prefix, s, e) => {
+        const setT = (p, s, e) => {
             if(s && s.includes(':')) {
-                document.getElementById(`${prefix}-s-h`).value = s.split(':')[0].padStart(2,'0');
-                document.getElementById(`${prefix}-s-m`).value = s.split(':')[1].padStart(2,'0');
-                document.getElementById(`${prefix}-e-h`).value = e.split(':')[0].padStart(2,'0');
-                document.getElementById(`${prefix}-e-m`).value = e.split(':')[1].padStart(2,'0');
-            } else { clearTime(prefix); }
+                const sp = s.split(':'), ep = e.split(':');
+                document.getElementById(`${p}-s-h`).value = sp[0].padStart(2,'0');
+                document.getElementById(`${p}-s-m`).value = sp[1].padStart(2,'0');
+                document.getElementById(`${p}-e-h`).value = ep[0].padStart(2,'0');
+                document.getElementById(`${p}-e-m`).value = ep[1].padStart(2,'0');
+            } else { clearTime(p); }
         };
-        setTime('rehe', t.reheS, t.reheE);
-        setTime('gp', t.gpS, t.gpE);
-        setTime('perf', t.perfS, t.perfE);
-        
+        setT('rehe', t.reheS, t.reheE); setT('gp', t.gpS, t.gpE); setT('perf', t.perfS, t.perfE);
         document.getElementById('del-btn').style.display = "block";
         updateChips(); openModal(true);
     }
@@ -315,13 +304,6 @@
         openModal(); setTimeout(loadData, 1500);
     }
 
-    function clearTime(prefix) {
-        document.getElementById(`${prefix}-s-h`).value = "none";
-        document.getElementById(`${prefix}-s-m`).value = "00";
-        document.getElementById(`${prefix}-e-h`).value = "none";
-        document.getElementById(`${prefix}-e-m`).value = "00";
-    }
-
     function selectMem(mem) {
         const idx = selectedOrder.indexOf(mem);
         if(idx > -1) selectedOrder.splice(idx, 1); else selectedOrder.push(mem);
@@ -330,11 +312,9 @@
 
     function updateChips() {
         document.querySelectorAll('.mem-chip').forEach(chip => {
-            const m = chip.id.replace('chip-', '');
-            const i = selectedOrder.indexOf(m);
-            const badge = chip.querySelector('.order-badge');
-            if(i > -1) { chip.classList.add('selected'); badge.innerText = roles[i] || 'Ex'; badge.className = 'order-badge ' + getRoleClass(roles[i]); badge.style.display='flex'; }
-            else { chip.classList.remove('selected'); badge.style.display='none'; }
+            const m = chip.id.replace('chip-', ''), i = selectedOrder.indexOf(m), b = chip.querySelector('.order-badge');
+            if(i > -1) { chip.classList.add('selected'); b.innerText = roles[i] || 'Ex'; b.className = 'order-badge ' + getRoleClass(roles[i]); b.style.display='flex'; }
+            else { chip.classList.remove('selected'); b.style.display='none'; }
         });
     }
 
@@ -344,7 +324,7 @@
         m.style.display = isShow ? 'none' : 'flex';
         if(!isShow && !keepData) {
             editingId = null; selectedOrder = []; 
-            ['rehe','gp','perf'].forEach(clearTime);
+            ['rehe','gp','perf'].forEach(initTime);
             document.getElementById('in-title').value = ""; document.getElementById('in-loc').value = "";
             document.getElementById('del-btn').style.display = "none";
             switchTimeTab('rehe'); updateChips();
@@ -355,17 +335,22 @@
     function showLoading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
     function changeMonth(diff) { viewDate.setMonth(viewDate.getMonth() + diff); render(); window.scrollTo(0, 0); }
     function goToday() { viewDate = new Date(); viewDate.setDate(1); render(); setTimeout(scrollToToday, 100); }
-    function scrollToToday() { const now = new Date(); const targetId = `day-${now.getDate()}`; const todayEl = document.getElementById(targetId); if (todayEl) todayEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    function scrollToToday() { const now = new Date(); const tId = `day-${now.getDate()}`; const el = document.getElementById(tId); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
     window.onload = () => {
         ['rehe','gp','perf'].forEach(p => {
-            const sh = document.getElementById(`${p}-s-h`);
-            const eh = document.getElementById(`${p}-e-h`);
-            const sm = document.getElementById(`${p}-s-m`);
-            const em = document.getElementById(`${p}-e-m`);
+            const sh = document.getElementById(`${p}-s-h`), eh = document.getElementById(`${p}-e-h`), sm = document.getElementById(`${p}-s-m`), em = document.getElementById(`${p}-e-m`);
             sh.innerHTML = eh.innerHTML = '<option value="none">--</option>';
-            for(let i=0; i<=23; i++) sh.innerHTML += eh.innerHTML += `<option value="${String(i).padStart(2,'0')}">${i}</option>`;
-            for(let i=0; i<60; i+=10) sm.innerHTML += em.innerHTML += `<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`;
+            for(let i=0; i<=23; i++) {
+                const val = String(i).padStart(2,'0');
+                sh.innerHTML += `<option value="${val}">${i}</option>`;
+                eh.innerHTML += `<option value="${val}">${i}</option>`;
+            }
+            for(let i=0; i<60; i+=10) {
+                const val = String(i).padStart(2,'0');
+                sm.innerHTML += `<option value="${val}">${val}</option>`;
+                em.innerHTML += `<option value="${val}">${val}</option>`;
+            }
         });
         loadData();
     };
