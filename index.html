@@ -3,212 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>東京フィルトロンボーンセクション スケジュール</title>
+    <title>東京フィルTbセクション 全自動同期版</title>
     <style>
         :root { --main: #1a1a1a; --bg: #f2f2f7; --accent: #d4af37; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #1c1c1e; }
         header { background: #fff; padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 10px rgba(0,0,0,0.1); }
-        h1 { margin: 0 0 12px 0; font-size: 1rem; color: var(--main); font-weight: 900; text-align: center; letter-spacing: 0.05em; }
-
-        .filter-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
-        .filter-bar::-webkit-scrollbar { display: none; }
-        .filter-btn { flex: 0 0 auto; padding: 8px 16px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; border: 1px solid #d1d1d6; background: white; color: #8e8e93; cursor: pointer; }
-        .filter-btn.active { border-color: var(--main); background: var(--main); color: white; }
-
+        h1 { margin: 0 0 12px 0; font-size: 0.9rem; color: var(--main); font-weight: 900; text-align: center; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
-
-        .day-row { background: white; border-radius: 14px; margin-bottom: 12px; display: flex; align-items: stretch; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); min-height: 100px; scroll-margin-top: 140px; }
-        .day-row.is-today { outline: 2px solid var(--accent); background: #fffdf5; }
-        
-        .date-side { width: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f9f9fb; border-right: 1px solid #e5e5ea; flex-shrink: 0; }
-        .date-side.sun { color: #ff3b30; } .date-side.sat { color: #007aff; }
-        .date-num { font-size: 1.4rem; font-weight: 800; }
-        .date-day { font-size: 0.7rem; font-weight: bold; }
-
-        .task-side { flex: 1; padding: 12px 15px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
-        .task-item { border-bottom: 1px solid #f2f2f7; padding-bottom: 8px; cursor: pointer; }
-        .task-item:last-child { border: none; }
-        
-        .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
-        .cat-tag { font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; color: white; font-weight: bold; }
-        .cat-リハ { background: #34c759; } .cat-GP { background: #ff9500; } .cat-本番 { background: #ff3b30; }
-        
-        /* 役割表示用スタイル */
-        .member-unit { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-        .role-label { font-size: 0.55rem; color: #8e8e93; font-weight: bold; }
-        .mem-tag { font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; color: white; font-weight: bold; }
-        .mem-A { background: #5856d6; } .mem-B { background: #007aff; } .mem-C { background: #32ade6; }
-        .mem-D { background: #af52de; } .mem-E { background: #555; } .mem-F { background: #777; }
-
-        .task-time { font-size: 0.85rem; font-weight: bold; color: #3a3a3c; }
-        .task-title { font-size: 1rem; font-weight: bold; display: block; margin: 2px 0; }
-        .task-loc { font-size: 0.8rem; color: #8e8e93; }
-
-        .fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--main); color: white; border: none; border-radius: 50%; font-size: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 200; }
-
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-content { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; max-height: 90vh; overflow-y: auto; }
-        input, select { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #e5e5ea; border-radius: 10px; font-size: 16px; background: #f9f9fb; box-sizing: border-box; }
-        
-        /* メンバー選択ボタン（クリック順に番号がつく） */
-        .mem-selector { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 10px 0; }
-        .mem-chip { padding: 10px; border-radius: 10px; border: 2px solid #e5e5ea; background: #f9f9fb; text-align: center; cursor: pointer; position: relative; font-weight: bold; font-size: 0.8rem; }
-        .mem-chip.selected { border-color: var(--main); background: #eee; }
-        .mem-chip .order-badge { position: absolute; top: -5px; right: -5px; background: var(--accent); color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: none; align-items: center; justify-content: center; }
-        .mem-chip.selected .order-badge { display: flex; }
-
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        .save-btn { flex: 2; background: var(--main); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; }
-        .del-btn { flex: 1; background: #fff0f0; color: #ff3b30; border: none; padding: 16px; border-radius: 12px; display: none; }
+        .day-row { background: white; border-radius: 14px; margin-bottom: 12px; display: flex; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); min-height: 100px; }
+        .date-side { width: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f9f9fb; border-right: 1px solid #e5e5ea; }
+        .task-side { flex: 1; padding: 12px 15px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+        .mem-tag { font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; background: var(--main); margin-right: 4px; }
+        .cat-tag { font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; color: white; background: #888; }
+        .fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--main); color: white; border-radius: 50%; border: none; font-size: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 200; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center; }
+        .modal-content { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>東京フィルトロンボーンセクション</h1>
-    <div class="filter-bar" id="filter-bar">
-        <button class="filter-btn active" onclick="filterMems('ALL')">全員表示</button>
-        <button class="filter-btn" onclick="filterMems('A')">A</button>
-        <button class="filter-btn" onclick="filterMems('B')">B</button>
-        <button class="filter-btn" onclick="filterMems('C')">C</button>
-        <button class="filter-btn" onclick="filterMems('D')">D</button>
-        <button class="filter-btn" onclick="filterMems('E')">E</button>
-        <button class="filter-btn" onclick="filterMems('F')">F</button>
-    </div>
+    <h1>東京フィルトロンボーンセクション (Sync)</h1>
 </header>
 
-<div class="container" id="calendar-container"></div>
+<div class="container" id="calendar-container">読み込み中...</div>
+
 <button class="fab" onclick="openModal()">＋</button>
 
 <div class="modal" id="modal">
     <div class="modal-content">
-        <h3 id="modal-title" style="margin-top:0;">スケジュール登録</h3>
-        <label style="font-size:0.8rem; color:#8e8e93; font-weight:bold;">メンバー選択（吹く番の順にタップ）</label>
-        <div class="mem-selector" id="mem-selector">
-            <div class="mem-chip" onclick="selectMem('A')" id="chip-A">A <div class="order-badge"></div></div>
-            <div class="mem-chip" onclick="selectMem('B')" id="chip-B">B <div class="order-badge"></div></div>
-            <div class="mem-chip" onclick="selectMem('C')" id="chip-C">C <div class="order-badge"></div></div>
-            <div class="mem-chip" onclick="selectMem('D')" id="chip-D">D <div class="order-badge"></div></div>
-            <div class="mem-chip" onclick="selectMem('E')" id="chip-E">E <div class="order-badge"></div></div>
-            <div class="mem-chip" onclick="selectMem('F')" id="chip-F">F <div class="order-badge"></div></div>
-        </div>
+        <h3>予定を追加 (自動同期)</h3>
         <input type="date" id="in-date">
-        <div style="display:flex; gap:5px; align-items:center;">
-            <select id="start-h"></select>:<select id="start-m"></select> 〜 <select id="end-h"></select>:<select id="end-m"></select>
-        </div>
-        <select id="in-cat"><option value="リハ">リハ</option><option value="GP">GP</option><option value="本番">本番</option></select>
-        <input type="text" id="in-title" placeholder="演目 / 指揮者"><input type="text" id="in-loc" placeholder="場所">
-        <div class="btn-group"><button id="delete-btn" class="del-btn" onclick="deleteTask()">削除</button><button class="save-btn" onclick="save()">保存</button></div>
-        <button onclick="openModal()" style="width:100%; background:none; border:none; color:#8e8e93; margin-top:15px;">閉じる</button>
+        <input type="text" id="in-title" placeholder="演目 / 内容">
+        <input type="text" id="in-loc" placeholder="場所">
+        <button style="width:100%; padding:15px; background:var(--main); color:white; border:none; border-radius:10px; font-weight:bold; margin-top:10px;" onclick="save()">保存して全員に共有</button>
+        <button onclick="openModal()" style="width:100%; background:none; border:none; color:#888; margin-top:10px;">キャンセル</button>
     </div>
 </div>
 
 <script>
-    const STORAGE_KEY = 'tokyo_phil_tb_role_v1';
-    let editingId = null;
-    let selectedOrder = [];
-    const roles = ["1st", "2nd", "Bass", "Ex1", "Ex2", "Ex3"];
+    const GAS_URL = "ここにデプロイしたウェブアプリのURLを貼り付けてください";
 
-    function selectMem(mem) {
-        const idx = selectedOrder.indexOf(mem);
-        if (idx > -1) {
-            selectedOrder.splice(idx, 1);
-        } else {
-            selectedOrder.push(mem);
-        }
-        updateChips();
+    async function save() {
+        const data = {
+            d: document.getElementById('in-date').value,
+            t: document.getElementById('in-title').value,
+            loc: document.getElementById('in-loc').value,
+            sTime: "10:00", eTime: "13:00", mems: ["Tb1"], cat: "リハ", id: Date.now()
+        };
+        await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) });
+        openModal();
+        loadData();
     }
 
-    function updateChips() {
-        document.querySelectorAll('.mem-chip').forEach(chip => {
-            const mem = chip.id.replace('chip-', '');
-            const orderIdx = selectedOrder.indexOf(mem);
-            if (orderIdx > -1) {
-                chip.classList.add('selected');
-                chip.querySelector('.order-badge').innerText = roles[orderIdx];
-            } else {
-                chip.classList.remove('selected');
-            }
-        });
+    async function loadData() {
+        const res = await fetch(GAS_URL);
+        const tasks = await res.json();
+        render(tasks);
     }
 
-    function openModal(taskId = null) {
-        const m = document.getElementById('modal');
-        const isOpen = m.style.display === 'flex';
-        m.style.display = isOpen ? 'none' : 'flex';
-        if (!isOpen) {
-            editingId = taskId;
-            selectedOrder = [];
-            if (taskId) {
-                const task = JSON.parse(localStorage.getItem(STORAGE_KEY)).find(t => t.id === taskId);
-                document.getElementById('in-date').value = task.d;
-                document.getElementById('in-title').value = task.t;
-                document.getElementById('in-loc').value = task.loc;
-                document.getElementById('in-cat').value = task.cat;
-                selectedOrder = [...task.mems]; // 順番を維持してコピー
-                const [sh, sm] = task.sTime.split(':'); const [eh, em] = task.eTime.split(':');
-                document.getElementById('start-h').value = sh; document.getElementById('start-m').value = sm;
-                document.getElementById('end-h').value = eh; document.getElementById('end-m').value = em;
-            }
-            updateChips();
-            document.getElementById('delete-btn').style.display = taskId ? "block" : "none";
-        }
-    }
-
-    function save() {
-        const d = document.getElementById('in-date').value;
-        const t = document.getElementById('in-title').value;
-        const sTime = `${document.getElementById('start-h').value}:${document.getElementById('start-m').value}`;
-        const eTime = `${document.getElementById('end-h').value}:${document.getElementById('end-m').value}`;
-        if (!d || !t || selectedOrder.length === 0) return alert("内容を入力してください");
-        let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        const newTask = { d, t, sTime, eTime, loc: document.getElementById('in-loc').value, mems: selectedOrder, cat: document.getElementById('in-cat').value, id: editingId || Date.now() };
-        if (editingId) { tasks = tasks.map(t => t.id === editingId ? newTask : t); } else { tasks.push(newTask); }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-        openModal(); render();
-    }
-
-    function render() {
-        const now = new Date(); const y = now.getFullYear(); const m = now.getMonth();
-        const tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        const todayStr = now.toISOString().split('T')[0];
+    function render(tasks) {
         let html = '';
-        for (let d = 1; d <= new Date(y, m + 1, 0).getDate(); d++) {
-            const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            let dayTasks = tasks.filter(t => t.d === dateStr);
-            if (document.querySelector('.filter-btn.active').innerText !== '全員表示') {
-                const filterMem = document.querySelector('.filter-btn.active').innerText;
-                dayTasks = dayTasks.filter(t => t.mems.includes(filterMem));
-                if (dayTasks.length === 0) continue;
-            }
-            dayTasks.sort((a, b) => a.sTime.localeCompare(b.sTime));
-            html += `<div id="day-${d}" class="day-row ${dateStr === todayStr ? 'is-today' : ''}">
-                <div class="date-side ${new Date(y, m, d).getDay() === 0 ? 'sun' : (new Date(y, m, d).getDay() === 6 ? 'sat' : '')}">
-                    <span class="date-num">${d}</span><span class="date-day">${['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][new Date(y, m, d).getDay()]}</span>
-                </div>
+        tasks.forEach(t => {
+            html += `<div class="day-row">
+                <div class="date-side"><strong>${t[0].split('-')[2]}</strong></div>
                 <div class="task-side">
-                    ${dayTasks.map(t => `<div class="task-item" onclick="openModal(${t.id})">
-                        <div class="task-meta">
-                            ${t.mems.map((m, i) => `<div class="member-unit"><span class="role-label">${roles[i]}</span><span class="mem-tag mem-${m}">${m}</span></div>`).join('')}
-                            <span class="cat-tag cat-${t.cat}">${t.cat}</span><span class="task-time">${t.sTime}-${t.eTime}</span>
-                        </div>
-                        <span class="task-title">${t.t}</span>${t.loc ? `<div class="task-loc">📍 ${t.loc}</div>` : ''}
-                    </div>`).join('')}
-                </div></div>`;
-        }
-        document.getElementById('calendar-container').innerHTML = html;
-        if (document.getElementById(`day-${now.getDate()}`)) document.getElementById(`day-${now.getDate()}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    <div><span class="cat-tag">${t[7]}</span> <strong>${t[1]}</strong></div>
+                    <div style="font-size:0.8rem; color:#666;">📍 ${t[4]} | ⏰ ${t[2]}-${t[3]}</div>
+                </div>
+            </div>`;
+        });
+        document.getElementById('calendar-container').innerHTML = html || "予定がありません";
     }
 
-    window.onload = () => {
-        const ids = ['start-h', 'end-h', 'start-m', 'end-m'];
-        const [sh, eh, sm, em] = ids.map(id => document.getElementById(id));
-        for (let i = 7; i <= 22; i++) { const opt = `<option value="${String(i).padStart(2, '0')}">${i}</option>`; sh.innerHTML += opt; eh.innerHTML += opt; }
-        for (let i = 0; i < 60; i += 10) { const opt = `<option value="${String(i).padStart(2, '0')}">${i}</option>`; sm.innerHTML += opt; em.innerHTML += opt; }
-        render();
-    };
-    function deleteTask() { if (confirm("削除しますか？")) { localStorage.setItem(STORAGE_KEY, JSON.stringify(JSON.parse(localStorage.getItem(STORAGE_KEY)).filter(t => t.id !== editingId))); openModal(); render(); } }
-    function filterMems(mem) { document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === (mem === 'ALL' ? '全員表示' : mem))); render(); }
+    function openModal() {
+        const m = document.getElementById('modal');
+        m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    window.onload = loadData;
 </script>
 </body>
 </html>
