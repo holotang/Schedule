@@ -37,7 +37,14 @@
         
         .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
         .member-unit { display: flex; flex-direction: column; align-items: center; gap: 1px; }
-        .role-label { font-size: 0.5rem; color: #8e8e93; font-weight: bold; }
+        .role-label { font-size: 0.55rem; color: #444; font-weight: 900; padding: 1px 4px; border-radius: 3px; }
+        
+        /* 役割（番手）カラー：シアン、マゼンタ、イエロー */
+        .role-1st-bg { background: #00ffff; }
+        .role-2nd-bg { background: #ff00ff; }
+        .role-Bass-bg { background: #ffff00; }
+        .role-Ex-bg { background: #e5e5ea; }
+
         .mem-tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 6px; color: white; font-weight: bold; }
         
         /* 奏者ごとのカラー設定 */
@@ -50,14 +57,11 @@
         .mem-Ex1, .chip-Ex1.selected { background: #8e8e93 !important; color: white !important; }
         .mem-Ex2, .chip-Ex2.selected { background: #545456 !important; color: white !important; }
 
-        /* 番手（Role）ごとのバッジカラー */
-        .role-1st { background: #ff3b30; }
-        .role-2nd { background: #007aff; }
-        .role-Bass { background: #34c759; }
-        .role-Ex { background: #8e8e93; }
-
         .cat-tag { font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; }
-        .cat-リハ { background: #8e8e93; } .cat-GP { background: #d4af37; } .cat-本番 { background: #000; }
+        .cat-リハ { background: #8e8e93; } 
+        .cat-GP { background: #d4af37; } 
+        .cat-本番 { background: #000; }
+        .cat-GP・本番 { background: linear-gradient(45deg, #d4af37, #000); }
 
         .task-title { font-size: 1rem; font-weight: bold; display: block; }
         .task-time { font-size: 0.85rem; font-weight: bold; color: #3a3a3c; }
@@ -68,8 +72,7 @@
         .modal-content { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; max-height: 85vh; overflow-y: auto; }
         .mem-selector { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 10px 0; }
         .mem-chip { padding: 10px; border-radius: 10px; border: 2px solid #e5e5ea; background: #f9f9fb; text-align: center; position: relative; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: all 0.2s; }
-        .mem-chip.selected { border-color: transparent; }
-        .order-badge { position: absolute; top: -8px; right: -8px; color: white; border-radius: 6px; padding: 2px 6px; font-size: 9px; display: none; align-items: center; justify-content: center; font-weight: 900; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10; border: 1px solid white; }
+        .order-badge { position: absolute; top: -8px; right: -8px; color: #000; border-radius: 6px; padding: 2px 6px; font-size: 9px; display: none; align-items: center; justify-content: center; font-weight: 900; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10; border: 1px solid #fff; }
         .mem-chip.selected .order-badge { display: flex; }
         
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #e5e5ea; border-radius: 10px; box-sizing: border-box; }
@@ -126,7 +129,12 @@
         </div>
         <input type="date" id="in-date">
         <div style="display:flex; gap:5px;"><select id="start-h"></select>:<select id="start-m"></select> 〜 <select id="end-h"></select>:<select id="end-m"></select></div>
-        <select id="in-cat"><option value="リハ">リハ</option><option value="GP">GP</option><option value="本番">本番</option></select>
+        <select id="in-cat">
+            <option value="リハ">リハ</option>
+            <option value="GP">GP</option>
+            <option value="本番">本番</option>
+            <option value="GP・本番">GP・本番</option>
+        </select>
         <input type="text" id="in-title" placeholder="内容"><input type="text" id="in-loc" placeholder="場所">
         <button class="save-btn" onclick="save()">保存して共有</button>
         <button id="del-btn" class="del-btn" onclick="deleteTask()">削除</button>
@@ -146,21 +154,24 @@
     let viewDate = new Date();
     viewDate.setDate(1);
 
+    function getRoleClass(role) {
+        if(role === '1st') return 'role-1st-bg';
+        if(role === '2nd') return 'role-2nd-bg';
+        if(role === 'Bass') return 'role-Bass-bg';
+        return 'role-Ex-bg';
+    }
+
     async function loadData() {
         showLoading(true);
         try {
             const res = await fetch(`${GAS_URL}?t=${new Date().getTime()}`);
             const raw = await res.json();
-            
             allTasks = raw ? raw.map(t => ({ 
                 d: String(t[0]), t: String(t[1]), sTime: String(t[2]), eTime: String(t[3]), 
                 loc: String(t[4]), mems: String(t[5]).split(','), id: String(t[6]), cat: String(t[7]) 
             })) : [];
-            
             render();
-            if (viewDate.getMonth() === new Date().getMonth()) {
-                scrollToToday();
-            }
+            if (viewDate.getMonth() === new Date().getMonth()) scrollToToday();
         } catch (e) {
             document.getElementById('calendar-container').innerHTML = '<div style="text-align:center; padding:50px; color:red;">読み込みエラー</div>';
         }
@@ -214,7 +225,13 @@
                 <div class="task-side">
                     ${dayTasks.map(t => `<div class="task-item" onclick="editModal('${t.id}')">
                         <div class="task-meta">
-                            ${t.mems.map((name,i) => `<div class="member-unit"><span class="role-label">${roles[i] || 'Ex'}</span><span class="mem-tag mem-${name}">${name}</span></div>`).join('')}
+                            ${t.mems.map((name,i) => {
+                                const role = roles[i] || 'Ex';
+                                return `<div class="member-unit">
+                                    <span class="role-label ${getRoleClass(role)}">${role}</span>
+                                    <span class="mem-tag mem-${name}">${name}</span>
+                                </div>`;
+                            }).join('')}
                             <span class="cat-tag cat-${t.cat}">${t.cat}</span><span class="task-time">${t.sTime}-${t.eTime}</span>
                         </div>
                         <span class="task-title">${t.t}</span>${t.loc && t.loc !== 'undefined' ? `<div class="task-loc">📍 ${t.loc}</div>` : ''}
@@ -293,12 +310,7 @@
                 const roleName = roles[i] || 'Ex';
                 badge.innerText = roleName;
                 badge.style.display='flex';
-                // 役割に応じたバッジの色を設定
-                badge.className = 'order-badge';
-                if(roleName === '1st') badge.classList.add('role-1st');
-                else if(roleName === '2nd') badge.classList.add('role-2nd');
-                else if(roleName === 'Bass') badge.classList.add('role-Bass');
-                else badge.classList.add('role-Ex');
+                badge.className = 'order-badge ' + getRoleClass(roleName);
             }
             else { chip.classList.remove('selected'); badge.style.display='none'; }
         });
