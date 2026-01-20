@@ -17,7 +17,6 @@
         .nav-btn { background: none; border: none; font-size: 1rem; cursor: pointer; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
         .nav-btn:active { background: #e5e5ea; }
 
-        /* ソートバーを極限までコンパクトに */
         .filter-bar { display: flex; gap: 4px; padding-bottom: 2px; justify-content: space-between; }
         .filter-btn { flex: 1; padding: 6px 0; border-radius: 8px; font-size: 0.75rem; font-weight: 900; border: 1px solid #d1d1d6; background: white; color: #8e8e93; text-align: center; white-space: nowrap; }
         .filter-btn.active { border-color: var(--main); background: var(--main); color: white; }
@@ -58,19 +57,21 @@
         .cat-リハ { background: #8e8e93; } 
         .cat-GP { background: #d4af37; } 
         .cat-本番 { background: #000; }
-        .cat-GP・本番 { background: linear-gradient(45deg, #d4af37, #000); }
 
         .task-title { font-size: 0.95rem; font-weight: bold; display: block; line-height: 1.3; }
-        .task-time-row { font-size: 0.8rem; font-weight: bold; color: #3a3a3c; display: flex; align-items: center; margin-bottom: 2px; }
+        .time-row-container { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .task-time-row { font-size: 0.8rem; font-weight: bold; color: #3a3a3c; display: flex; align-items: center; }
         .task-loc { font-size: 0.75rem; color: #8e8e93; }
 
         .fab { position: fixed; bottom: 25px; right: 20px; width: 55px; height: 55px; background: var(--main); color: white; border-radius: 50%; font-size: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: none; z-index: 200; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-content { background: white; width: 90%; max-width: 400px; padding: 20px; border-radius: 20px; max-height: 85vh; overflow-y: auto; }
         
-        .time-tabs { display: flex; gap: 5px; margin: 12px 0 8px 0; border-bottom: 1px solid #e5e5ea; }
-        .time-tab { flex: 1; padding: 6px; text-align: center; font-size: 0.75rem; font-weight: bold; color: #8e8e93; cursor: pointer; border-radius: 6px 6px 0 0; }
+        /* 3タブのスタイル */
+        .time-tabs { display: flex; gap: 2px; margin: 12px 0 8px 0; border-bottom: 1px solid #e5e5ea; }
+        .time-tab { flex: 1; padding: 8px 2px; text-align: center; font-size: 0.7rem; font-weight: bold; color: #8e8e93; cursor: pointer; border-radius: 6px 6px 0 0; }
         .time-tab.active { color: var(--main); border-bottom: 2px solid var(--main); background: #f2f2f7; }
+        .time-tab.has-data { color: var(--accent); }
         .time-input-group { background: #f2f2f7; padding: 10px; border-radius: 8px; display: none; }
         .time-input-group.active { display: block; }
 
@@ -79,7 +80,7 @@
         .order-badge { position: absolute; top: -6px; right: -6px; color: #000; border-radius: 4px; padding: 1px 4px; font-size: 8px; display: none; align-items: center; justify-content: center; font-weight: 900; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10; border: 1px solid #fff; }
         .mem-chip.selected .order-badge { display: flex; }
         
-        input, select { width: 100%; padding: 10px; margin: 4px 0; border: 1px solid #e5e5ea; border-radius: 8px; box-sizing: border-box; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 10px; margin: 4px 0; border: 1px solid #e5e5ea; border-radius: 10px; box-sizing: border-box; font-size: 0.9rem; }
         .save-btn { width: 100%; background: var(--main); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; margin-top: 10px; }
         .del-btn { background: #fff0f0; color: #ff3b30; margin-top: 8px; width: 100%; padding: 8px; border: none; border-radius: 10px; font-size: 0.8rem; display: none; }
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; font-weight: bold; }
@@ -122,22 +123,33 @@
         <input type="text" id="in-loc" placeholder="場所">
 
         <div class="time-tabs">
-            <div class="time-tab active" onclick="switchTimeTab('main')">通常/本番</div>
-            <div class="time-tab" onclick="switchTimeTab('gp')">GP設定</div>
+            <div class="time-tab active" id="tab-rehe" onclick="switchTimeTab('rehe')">リハ</div>
+            <div class="time-tab" id="tab-gp" onclick="switchTimeTab('gp')">GP</div>
+            <div class="time-tab" id="tab-perf" onclick="switchTimeTab('perf')">本番</div>
         </div>
 
-        <div id="time-main" class="time-input-group active">
-            <select id="in-cat"><option value="本番">本番</option><option value="リハ">リハ</option></select>
+        <div id="time-rehe" class="time-input-group active">
+            <label class="input-label" style="font-size:0.6rem; color:#888;">リハの時間</label>
             <div style="display:flex; gap:3px; align-items:center;">
-                <select id="start-h"></select>:<select id="start-m"></select> 〜 <select id="end-h"></select>:<select id="end-m"></select>
+                <select id="rehe-s-h"></select>:<select id="rehe-s-m"></select> 〜 <select id="rehe-e-h"></select>:<select id="rehe-e-m"></select>
             </div>
+            <button onclick="clearTime('rehe')" style="width:100%; background:none; border:none; color:#ff3b30; font-size:0.6rem; margin-top:5px;">リハ設定を解除</button>
         </div>
 
         <div id="time-gp" class="time-input-group">
+            <label class="input-label" style="font-size:0.6rem; color:#888;">GPの時間</label>
             <div style="display:flex; gap:3px; align-items:center;">
-                <select id="gp-start-h"></select>:<select id="gp-start-m"></select> 〜 <select id="gp-end-h"></select>:<select id="gp-end-m"></select>
+                <select id="gp-s-h"></select>:<select id="gp-s-m"></select> 〜 <select id="gp-e-h"></select>:<select id="gp-e-m"></select>
             </div>
-            <button onclick="clearGP()" style="width:100%; background:none; border:none; color:#ff3b30; font-size:0.65rem; margin-top:5px;">GP解除</button>
+            <button onclick="clearTime('gp')" style="width:100%; background:none; border:none; color:#ff3b30; font-size:0.6rem; margin-top:5px;">GP設定を解除</button>
+        </div>
+
+        <div id="time-perf" class="time-input-group">
+            <label class="input-label" style="font-size:0.6rem; color:#888;">本番の時間</label>
+            <div style="display:flex; gap:3px; align-items:center;">
+                <select id="perf-s-h"></select>:<select id="perf-s-m"></select> 〜 <select id="perf-e-h"></select>:<select id="perf-e-m"></select>
+            </div>
+            <button onclick="clearTime('perf')" style="width:100%; background:none; border:none; color:#ff3b30; font-size:0.6rem; margin-top:5px;">本番設定を解除</button>
         </div>
 
         <label style="display:block; margin-top:12px; font-size:0.65rem; color:#888;">奏者 (1st→2nd→Bass...)</label>
@@ -180,23 +192,24 @@
         try {
             const res = await fetch(`${GAS_URL}?t=${new Date().getTime()}`);
             const raw = await res.json();
+            // スプシ構造：[0日付, 1タイトル, 2リハ開始, 3リハ終了, 4場所, 5奏者, 6ID, 7GP開始, 8GP終了, 9本番開始, 10本番終了]
             allTasks = raw ? raw.map(t => ({ 
-                d: String(t[0]), t: String(t[1]), sTime: String(t[2]), eTime: String(t[3]), 
-                loc: String(t[4]), mems: String(t[5]).split(','), id: String(t[6]), cat: String(t[7]),
-                gpStart: String(t[8] || ""), gpEnd: String(t[9] || "")
+                d: String(t[0]), t: String(t[1]),
+                reheS: String(t[2] || ""), reheE: String(t[3] || ""),
+                loc: String(t[4]), mems: String(t[5]).split(','), id: String(t[6]),
+                gpS: String(t[7] || ""), gpE: String(t[8] || ""),
+                perfS: String(t[9] || ""), perfE: String(t[10] || "")
             })) : [];
             render();
             if (viewDate.getMonth() === new Date().getMonth()) scrollToToday();
-        } catch (e) {
-            document.getElementById('calendar-container').innerHTML = '<div style="text-align:center; padding:50px; color:red;">エラー</div>';
-        }
+        } catch (e) { document.getElementById('calendar-container').innerHTML = 'エラー'; }
         showLoading(false);
     }
 
     function switchTimeTab(tab) {
         document.querySelectorAll('.time-tab').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.time-input-group').forEach(el => el.classList.remove('active'));
-        event.currentTarget.classList.add('active');
+        document.getElementById('tab-' + tab).classList.add('active');
         document.getElementById('time-' + tab).classList.add('active');
     }
 
@@ -210,7 +223,7 @@
         const lastDay = new Date(y, m, 0).getDate();
         for(let d=1; d<=lastDay; d++) {
             const dateStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            let dayTasks = allTasks.filter(t => t.d.includes(dateStr)).sort((a,b) => a.sTime.localeCompare(b.sTime));
+            let dayTasks = allTasks.filter(t => t.d.includes(dateStr));
             if(currentFilter !== 'ALL') dayTasks = dayTasks.filter(t => t.mems.includes(currentFilter));
             if(dayTasks.length === 0 && currentFilter !== 'ALL') continue;
 
@@ -219,15 +232,24 @@
                     <span class="date-num">${d}</span><span class="date-day">${dayNames[new Date(y,m-1,d).getDay()]}</span>
                 </div>
                 <div class="task-side">
-                    ${dayTasks.map(t => `<div class="task-item" onclick="editModal('${t.id}')">
-                        <div class="task-meta">
-                            ${t.mems.map((name,i) => `<div class="member-unit"><span class="role-label ${getRoleClass(roles[i])}">${roles[i] || 'Ex'}</span><span class="mem-tag mem-${name}">${name}</span></div>`).join('')}
-                        </div>
-                        <span class="task-title">${t.t}</span>
-                        ${t.gpStart && t.gpStart !== "undefined" && t.gpStart !== "" ? `<div class="task-time-row"><span class="cat-tag cat-GP">GP</span>${t.gpStart}-${t.gpEnd}</div>` : ''}
-                        <div class="task-time-row"><span class="cat-tag cat-${t.cat}">${t.cat}</span>${t.sTime}-${t.eTime}</div>
-                        ${t.loc && t.loc !== 'undefined' ? `<div class="task-loc">📍 ${t.loc}</div>` : ''}
-                    </div>`).join('') || '<span style="color:#ccc; font-size:0.75rem;">No Gigs</span>'}
+                    ${dayTasks.map(t => {
+                        let segments = [];
+                        if(t.reheS && t.reheS !== "none:00") segments.push({ label: 'リハ', s: t.reheS, e: t.reheE, cat: 'リハ' });
+                        if(t.gpS && t.gpS !== "none:00") segments.push({ label: 'GP', s: t.gpS, e: t.gpE, cat: 'GP' });
+                        if(t.perfS && t.perfS !== "none:00") segments.push({ label: '本番', s: t.perfS, e: t.perfE, cat: '本番' });
+                        segments.sort((a,b) => a.s.localeCompare(b.s));
+
+                        return `<div class="task-item" onclick="editModal('${t.id}')">
+                            <div class="task-meta">
+                                ${t.mems.map((name,i) => `<div class="member-unit"><span class="role-label ${getRoleClass(roles[i])}">${roles[i] || 'Ex'}</span><span class="mem-tag mem-${name}">${name}</span></div>`).join('')}
+                            </div>
+                            <span class="task-title">${t.t}</span>
+                            <div class="time-row-container">
+                                ${segments.map(sm => `<div class="task-time-row"><span class="cat-tag cat-${sm.cat}">${sm.label}</span>${sm.s}-${sm.e}</div>`).join('')}
+                            </div>
+                            ${t.loc && t.loc !== 'undefined' ? `<div class="task-loc">📍 ${t.loc}</div>` : ''}
+                        </div>`
+                    }).join('') || '<span style="color:#ccc; font-size:0.75rem;">No Gigs</span>'}
                 </div></div>`;
         }
         document.getElementById('calendar-container').innerHTML = html;
@@ -236,24 +258,54 @@
     async function save() {
         const d = document.getElementById('in-date').value;
         const t = document.getElementById('in-title').value;
-        if(!d || !t || selectedOrder.length === 0) return alert("内容を入力してください");
+        if(!d || !t || selectedOrder.length === 0) return alert("入力内容を確認してください");
+        
+        const getData = (prefix) => {
+            const h = document.getElementById(`${prefix}-s-h`).value;
+            const m = document.getElementById(`${prefix}-s-m`).value;
+            const eh = document.getElementById(`${prefix}-e-h`).value;
+            const em = document.getElementById(`${prefix}-e-m`).value;
+            return h === "none" ? "" : [`${h}:${m}`, `${eh}:${em}`];
+        };
+
+        const rehe = getData('rehe');
+        const gp = getData('gp');
+        const perf = getData('perf');
+
+        if(!rehe && !gp && !perf) return alert("時間を設定してください");
+
         showLoading(true);
         const data = {
-            d, t,
-            sTime: `${document.getElementById('start-h').value}:${document.getElementById('start-m').value}`,
-            eTime: `${document.getElementById('end-h').value}:${document.getElementById('end-m').value}`,
-            gpStart: document.getElementById('gp-start-h').value !== "none" ? `${document.getElementById('gp-start-h').value}:${document.getElementById('gp-start-m').value}` : "",
-            gpEnd: document.getElementById('gp-start-h').value !== "none" ? `${document.getElementById('gp-end-h').value}:${document.getElementById('gp-end-m').value}` : "",
-            loc: document.getElementById('in-loc').value,
-            mems: selectedOrder,
-            cat: document.getElementById('in-cat').value,
-            id: editingId || Date.now(),
+            d, t, id: editingId || Date.now(), loc: document.getElementById('in-loc').value, mems: selectedOrder,
+            reheS: rehe ? rehe[0] : "", reheE: rehe ? rehe[1] : "",
+            gpS: gp ? gp[0] : "", gpE: gp ? gp[1] : "",
+            perfS: perf ? perf[0] : "", perfE: perf ? perf[1] : "",
             method: editingId ? "UPDATE" : "POST"
         };
-        try {
-            await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(data) });
-            openModal(); setTimeout(loadData, 1500); 
-        } catch (e) { alert("保存失敗"); showLoading(false); }
+        try { await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(data) }); openModal(); setTimeout(loadData, 1500); } catch (e) { alert("失敗"); showLoading(false); }
+    }
+
+    function editModal(id) {
+        const t = allTasks.find(x => x.id == id); if(!t) return;
+        editingId = id; selectedOrder = [...t.mems];
+        document.getElementById('in-date').value = t.d;
+        document.getElementById('in-title').value = t.t;
+        document.getElementById('in-loc').value = t.loc === 'undefined' ? '' : t.loc;
+        
+        const setTime = (prefix, s, e) => {
+            if(s && s.includes(':')) {
+                document.getElementById(`${prefix}-s-h`).value = s.split(':')[0].padStart(2,'0');
+                document.getElementById(`${prefix}-s-m`).value = s.split(':')[1].padStart(2,'0');
+                document.getElementById(`${prefix}-e-h`).value = e.split(':')[0].padStart(2,'0');
+                document.getElementById(`${prefix}-e-m`).value = e.split(':')[1].padStart(2,'0');
+            } else { clearTime(prefix); }
+        };
+        setTime('rehe', t.reheS, t.reheE);
+        setTime('gp', t.gpS, t.gpE);
+        setTime('perf', t.perfS, t.perfE);
+        
+        document.getElementById('del-btn').style.display = "block";
+        updateChips(); openModal(true);
     }
 
     async function deleteTask() {
@@ -263,34 +315,11 @@
         openModal(); setTimeout(loadData, 1500);
     }
 
-    function editModal(id) {
-        const t = allTasks.find(x => x.id == id); if(!t) return;
-        editingId = id; selectedOrder = [...t.mems];
-        document.getElementById('in-date').value = t.d;
-        document.getElementById('in-title').value = t.t;
-        document.getElementById('in-loc').value = t.loc === 'undefined' ? '' : t.loc;
-        document.getElementById('in-cat').value = t.cat;
-        
-        if(t.sTime.includes(':')) {
-            document.getElementById('start-h').value = t.sTime.split(':')[0].padStart(2,'0');
-            document.getElementById('start-m').value = t.sTime.split(':')[1].padStart(2,'0');
-        }
-        if(t.gpStart && t.gpStart.includes(':')) {
-            document.getElementById('gp-start-h').value = t.gpStart.split(':')[0].padStart(2,'0');
-            document.getElementById('gp-start-m').value = t.gpStart.split(':')[1].padStart(2,'0');
-            document.getElementById('gp-end-h').value = t.gpEnd.split(':')[0].padStart(2,'0');
-            document.getElementById('gp-end-m').value = t.gpEnd.split(':')[1].padStart(2,'0');
-        } else { clearGP(); }
-        
-        document.getElementById('del-btn').style.display = "block";
-        updateChips(); openModal(true);
-    }
-
-    function clearGP() {
-        document.getElementById('gp-start-h').value = "none";
-        document.getElementById('gp-start-m').value = "00";
-        document.getElementById('gp-end-h').value = "none";
-        document.getElementById('gp-end-m').value = "00";
+    function clearTime(prefix) {
+        document.getElementById(`${prefix}-s-h`).value = "none";
+        document.getElementById(`${prefix}-s-m`).value = "00";
+        document.getElementById(`${prefix}-e-h`).value = "none";
+        document.getElementById(`${prefix}-e-m`).value = "00";
     }
 
     function selectMem(mem) {
@@ -304,13 +333,8 @@
             const m = chip.id.replace('chip-', '');
             const i = selectedOrder.indexOf(m);
             const badge = chip.querySelector('.order-badge');
-            if(i > -1) { 
-                chip.classList.add('selected'); 
-                const roleName = roles[i] || 'Ex';
-                badge.innerText = roleName;
-                badge.className = 'order-badge ' + getRoleClass(roleName);
-                badge.style.display='flex';
-            } else { chip.classList.remove('selected'); badge.style.display='none'; }
+            if(i > -1) { chip.classList.add('selected'); badge.innerText = roles[i] || 'Ex'; badge.className = 'order-badge ' + getRoleClass(roles[i]); badge.style.display='flex'; }
+            else { chip.classList.remove('selected'); badge.style.display='none'; }
         });
     }
 
@@ -319,35 +343,29 @@
         const isShow = m.style.display === 'flex';
         m.style.display = isShow ? 'none' : 'flex';
         if(!isShow && !keepData) {
-            editingId = null; selectedOrder = []; clearGP();
+            editingId = null; selectedOrder = []; 
+            ['rehe','gp','perf'].forEach(clearTime);
             document.getElementById('in-title').value = ""; document.getElementById('in-loc').value = "";
             document.getElementById('del-btn').style.display = "none";
-            switchTimeTab('main'); updateChips();
+            switchTimeTab('rehe'); updateChips();
         }
     }
 
-    function filterMems(mem) {
-        currentFilter = mem;
-        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === (mem === 'ALL' ? '全員' : mem)));
-        render();
-    }
-
+    function filterMems(mem) { currentFilter = mem; document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === (mem === 'ALL' ? '全員' : mem))); render(); }
     function showLoading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
     function changeMonth(diff) { viewDate.setMonth(viewDate.getMonth() + diff); render(); window.scrollTo(0, 0); }
     function goToday() { viewDate = new Date(); viewDate.setDate(1); render(); setTimeout(scrollToToday, 100); }
     function scrollToToday() { const now = new Date(); const targetId = `day-${now.getDate()}`; const todayEl = document.getElementById(targetId); if (todayEl) todayEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
     window.onload = () => {
-        const hSelects = ['start-h', 'end-h', 'gp-start-h', 'gp-end-h'];
-        const mSelects = ['start-m', 'end-m', 'gp-start-m', 'gp-end-m'];
-        hSelects.forEach(id => {
-            const s = document.getElementById(id);
-            if(id.startsWith('gp')) s.innerHTML = '<option value="none">--</option>';
-            for(let i=0; i<=23; i++) s.innerHTML += `<option value="${String(i).padStart(2,'0')}">${i}</option>`;
-        });
-        mSelects.forEach(id => {
-            const s = document.getElementById(id);
-            for(let i=0; i<60; i+=5) s.innerHTML += `<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`;
+        ['rehe','gp','perf'].forEach(p => {
+            const sh = document.getElementById(`${p}-s-h`);
+            const eh = document.getElementById(`${p}-e-h`);
+            const sm = document.getElementById(`${p}-s-m`);
+            const em = document.getElementById(`${p}-e-m`);
+            sh.innerHTML = eh.innerHTML = '<option value="none">--</option>';
+            for(let i=0; i<=23; i++) sh.innerHTML += eh.innerHTML += `<option value="${String(i).padStart(2,'0')}">${i}</option>`;
+            for(let i=0; i<60; i+=10) sm.innerHTML += em.innerHTML += `<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`;
         });
         loadData();
     };
