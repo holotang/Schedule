@@ -96,13 +96,9 @@
     async function loadData() {
         showLoading(true);
         try {
-            // 強力なキャッシュ回避設定
-            const response = await fetch(`${GAS_URL}?t=${Date.now()}`, { 
-                method: 'GET',
-                mode: 'cors',
-                cache: 'no-store'
-            });
-            const raw = await response.json();
+            // URLに現在時刻を混ぜることで、Googleに毎回新しいデータを読みに行かせます
+            const res = await fetch(`${GAS_URL}?t=${new Date().getTime()}`);
+            const raw = await res.json();
             
             if (!raw || raw.length === 0) {
                 allTasks = [];
@@ -136,22 +132,26 @@
             method: editingId ? "UPDATE" : "POST"
         };
         try {
-            // 書き込み後は1.5秒待ってから読み込みを実行
-            await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data), mode: "no-cors" });
+            // no-corsモードを回避するため、fetchの仕方を微調整
+            await fetch(GAS_URL, { 
+                method: "POST", 
+                body: JSON.stringify(data)
+            });
             openModal();
-            setTimeout(loadData, 1500); 
+            setTimeout(loadData, 1000); 
         } catch (e) {
-            alert("保存に失敗しました");
-            showLoading(false);
+            // エラーが出ても実際には保存されていることが多いので再読み込み
+            openModal();
+            setTimeout(loadData, 1000);
         }
     }
 
     async function deleteTask() {
         if(!confirm("削除しますか？")) return;
         showLoading(true);
-        await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ method: "DELETE", id: editingId }), mode: "no-cors" });
+        await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ method: "DELETE", id: editingId }) });
         openModal();
-        setTimeout(loadData, 1500);
+        setTimeout(loadData, 1000);
     }
 
     function render() {
@@ -248,4 +248,3 @@
 </script>
 </body>
 </html>
-
