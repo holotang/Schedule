@@ -3,54 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>東京フィルトロンボーンセクション Sync</title>
+    <title>東京フィルTbセクション Sync</title>
     <style>
         :root { --main: #1a1a1a; --bg: #f2f2f7; --accent: #d4af37; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #1c1c1e; }
         header { background: #fff; padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 10px rgba(0,0,0,0.1); }
         h1 { margin: 0 0 12px 0; font-size: 0.9rem; color: var(--main); font-weight: 900; text-align: center; }
-
         .filter-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
         .filter-bar::-webkit-scrollbar { display: none; }
         .filter-btn { flex: 0 0 auto; padding: 8px 16px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; border: 1px solid #d1d1d6; background: white; color: #8e8e93; cursor: pointer; }
         .filter-btn.active { border-color: var(--main); background: var(--main); color: white; }
-
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
-
         .day-row { background: white; border-radius: 14px; margin-bottom: 12px; display: flex; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); min-height: 100px; scroll-margin-top: 140px; }
         .day-row.is-today { outline: 2px solid var(--accent); background: #fffdf5; }
-        
         .date-side { width: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f9f9fb; border-right: 1px solid #e5e5ea; flex-shrink: 0; }
         .date-side.sun { color: #ff3b30; } .date-side.sat { color: #007aff; }
         .date-num { font-size: 1.4rem; font-weight: 800; }
         .date-day { font-size: 0.7rem; font-weight: bold; }
-
         .task-side { flex: 1; padding: 12px 15px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
         .task-item { border-bottom: 1px solid #f2f2f7; padding-bottom: 8px; cursor: pointer; }
         .task-item:last-child { border: none; }
-        
         .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
         .member-unit { display: flex; flex-direction: column; align-items: center; gap: 2px; }
         .role-label { font-size: 0.55rem; color: #8e8e93; font-weight: bold; }
         .mem-tag { font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; color: white; font-weight: bold; background: #5856d6; }
         .cat-tag { font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; color: white; font-weight: bold; }
         .cat-リハ { background: #34c759; } .cat-GP { background: #ff9500; } .cat-本番 { background: #ff3b30; }
-
         .task-title { font-size: 1rem; font-weight: bold; display: block; }
         .task-time { font-size: 0.85rem; font-weight: bold; color: #3a3a3c; }
         .task-loc { font-size: 0.8rem; color: #8e8e93; }
-
         .fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--main); color: white; border-radius: 50%; font-size: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: none; z-index: 200; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-content { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; max-height: 85vh; overflow-y: auto; }
-        
         .mem-selector { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 10px 0; }
         .mem-chip { padding: 10px; border-radius: 10px; border: 2px solid #e5e5ea; background: #f9f9fb; text-align: center; position: relative; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
         .mem-chip.selected { border-color: var(--main); background: #eee; }
         .order-badge { position: absolute; top: -5px; right: -5px; background: var(--accent); color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; display: none; align-items: center; justify-content: center; }
         .mem-chip.selected .order-badge { display: flex; }
-
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #e5e5ea; border-radius: 10px; box-sizing: border-box; }
         .save-btn { width: 100%; background: var(--main); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; margin-top: 10px; }
         .del-btn { background: #fff0f0; color: #ff3b30; margin-top: 8px; width: 100%; padding: 10px; border: none; border-radius: 10px; display: none; }
@@ -65,12 +54,7 @@
     <h1>東京フィルトロンボーンセクション</h1>
     <div class="filter-bar" id="filter-bar">
         <button class="filter-btn active" onclick="filterMems('ALL')">全員表示</button>
-        <button class="filter-btn" onclick="filterMems('A')">A</button>
-        <button class="filter-btn" onclick="filterMems('B')">B</button>
-        <button class="filter-btn" onclick="filterMems('C')">C</button>
-        <button class="filter-btn" onclick="filterMems('D')">D</button>
-        <button class="filter-btn" onclick="filterMems('E')">E</button>
-        <button class="filter-btn" onclick="filterMems('F')">F</button>
+        <button class="filter-btn" onclick="filterMems('A')">A</button><button class="filter-btn" onclick="filterMems('B')">B</button><button class="filter-btn" onclick="filterMems('C')">C</button><button class="filter-btn" onclick="filterMems('D')">D</button><button class="filter-btn" onclick="filterMems('E')">E</button><button class="filter-btn" onclick="filterMems('F')">F</button>
     </div>
 </header>
 
@@ -92,9 +76,9 @@
         <input type="date" id="in-date">
         <div style="display:flex; gap:5px;"><select id="start-h"></select>:<select id="start-m"></select> 〜 <select id="end-h"></select>:<select id="end-m"></select></div>
         <select id="in-cat"><option value="リハ">リハ</option><option value="GP">GP</option><option value="本番">本番</option></select>
-        <input type="text" id="in-title" placeholder="演目 / 指揮者"><input type="text" id="in-loc" placeholder="場所">
-        <button class="save-btn" onclick="save()">保存して共有</button>
-        <button id="del-btn" class="del-btn" onclick="deleteTask()">この予定を削除</button>
+        <input type="text" id="in-title" placeholder="内容"><input type="text" id="in-loc" placeholder="場所">
+        <button class="save-btn" onclick="save()">保存して全員に共有</button>
+        <button id="del-btn" class="del-btn" onclick="deleteTask()">削除</button>
         <button onclick="openModal()" style="width:100%; background:none; border:none; color:#8e8e93; margin-top:10px;">閉じる</button>
     </div>
 </div>
@@ -112,9 +96,13 @@
     async function loadData() {
         showLoading(true);
         try {
-            // キャッシュ対策としてタイムスタンプを付与
-            const res = await fetch(`${GAS_URL}?t=${Date.now()}`);
-            const raw = await res.json();
+            // 強力なキャッシュ回避設定
+            const response = await fetch(`${GAS_URL}?t=${Date.now()}`, { 
+                method: 'GET',
+                mode: 'cors',
+                cache: 'no-store'
+            });
+            const raw = await response.json();
             
             if (!raw || raw.length === 0) {
                 allTasks = [];
@@ -127,8 +115,7 @@
                 render();
             }
         } catch (e) {
-            console.error(e);
-            document.getElementById('calendar-container').innerHTML = '<div style="text-align:center; padding:50px; color:red;">データ取得エラー</div>';
+            document.getElementById('calendar-container').innerHTML = '<div style="text-align:center; padding:50px; color:red;">データ読み込みエラー</div>';
         }
         showLoading(false);
     }
@@ -136,11 +123,10 @@
     async function save() {
         const d = document.getElementById('in-date').value;
         const t = document.getElementById('in-title').value;
-        if(!d || !t || selectedOrder.length === 0) return alert("入力内容が足りません");
-
+        if(!d || !t || selectedOrder.length === 0) return alert("内容を入力してください");
         showLoading(true);
         const data = {
-            d: d, t: t,
+            d, t,
             sTime: `${document.getElementById('start-h').value}:${document.getElementById('start-m').value}`,
             eTime: `${document.getElementById('end-h').value}:${document.getElementById('end-m').value}`,
             loc: document.getElementById('in-loc').value,
@@ -149,46 +135,37 @@
             id: editingId || Date.now(),
             method: editingId ? "UPDATE" : "POST"
         };
-
         try {
-            await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) });
+            // 書き込み後は1.5秒待ってから読み込みを実行
+            await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data), mode: "no-cors" });
             openModal();
-            // 保存後に少し待ってから読み込む
-            setTimeout(loadData, 1000);
+            setTimeout(loadData, 1500); 
         } catch (e) {
-            alert("保存に失敗しました。");
+            alert("保存に失敗しました");
             showLoading(false);
         }
     }
 
     async function deleteTask() {
-        if(!confirm("この予定を削除しますか？")) return;
+        if(!confirm("削除しますか？")) return;
         showLoading(true);
-        try {
-            await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ method: "DELETE", id: editingId }) });
-            openModal();
-            setTimeout(loadData, 1000);
-        } catch (e) {
-            alert("削除に失敗しました。");
-            showLoading(false);
-        }
+        await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ method: "DELETE", id: editingId }), mode: "no-cors" });
+        openModal();
+        setTimeout(loadData, 1500);
     }
 
     function render() {
         const now = new Date(); const y = now.getFullYear(); const m = now.getMonth();
         const todayStr = now.toISOString().split('T')[0];
-        let html = '';
         const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-
+        let html = '';
         for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             let dayTasks = allTasks.filter(t => t.d === dateStr).sort((a,b) => a.sTime.localeCompare(b.sTime));
-            
             if(currentFilter !== 'ALL') {
                 dayTasks = dayTasks.filter(t => t.mems.includes(currentFilter));
                 if(dayTasks.length === 0) continue;
             }
-
             html += `<div id="day-${d}" class="day-row ${dateStr === todayStr ? 'is-today' : ''}">
                 <div class="date-side ${new Date(y, m, d).getDay() === 0 ? 'sun' : (new Date(y, m, d).getDay() === 6 ? 'sat' : '')}">
                     <span class="date-num">${d}</span><span class="date-day">${dayNames[new Date(y,m,d).getDay()]}</span>
@@ -211,8 +188,8 @@
 
     function editModal(id) {
         const t = allTasks.find(x => x.id == id);
-        editingId = id;
-        selectedOrder = [...t.mems];
+        if(!t) return;
+        editingId = id; selectedOrder = [...t.mems];
         document.getElementById('in-date').value = t.d;
         document.getElementById('in-title').value = t.t;
         document.getElementById('in-loc').value = t.loc;
@@ -222,8 +199,7 @@
         document.getElementById('end-h').value = t.eTime.split(':')[0];
         document.getElementById('end-m').value = t.eTime.split(':')[1];
         document.getElementById('del-btn').style.display = "block";
-        updateChips();
-        openModal(true);
+        updateChips(); openModal(true);
     }
 
     function selectMem(mem) {
@@ -247,7 +223,7 @@
         const isShow = m.style.display === 'flex';
         m.style.display = isShow ? 'none' : 'flex';
         if(!isShow && !keepData) {
-            editingId = null; selectedOrder = []; 
+            editingId = null; selectedOrder = [];
             document.getElementById('in-title').value = ""; document.getElementById('in-loc').value = "";
             document.getElementById('del-btn').style.display = "none";
             updateChips();
