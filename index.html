@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Team Schedule Pro</title>
+    <title>Team Schedule Multi</title>
     <style>
         :root { --main: #2563eb; --bg: #f1f5f9; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #1e293b; }
@@ -11,7 +11,6 @@
         h1 { margin: 0; font-size: 1.1rem; color: var(--main); font-weight: 900; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
 
-        /* 行レイアウト */
         .day-row { background: white; border-radius: 16px; margin-bottom: 10px; display: flex; align-items: stretch; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); min-height: 90px; }
         .day-row.is-today { outline: 2px solid var(--main); }
         .date-side { width: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; border-right: 1px solid #e2e8f0; }
@@ -44,7 +43,12 @@
         .modal-content { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 24px; max-height: 90vh; overflow-y: auto; }
         input, select { width: 100%; padding: 12px; margin: 6px 0 12px 0; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 16px; background: #f8fafc; box-sizing: border-box; }
         label { font-size: 0.8rem; color: #64748b; font-weight: bold; }
-        .time-select-group { display: flex; gap: 5px; align-items: center; margin-bottom: 12px; }
+        
+        /* 複数選択チェックボックス */
+        .mem-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 15px 0; }
+        .mem-opt { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; background: #f8fafc; padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .mem-opt input { width: auto; margin: 0; }
+
         .save-btn { width: 100%; background: var(--main); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; margin-top: 10px; font-size: 1rem; }
     </style>
 </head>
@@ -63,21 +67,21 @@
     <div class="modal-content">
         <h3 style="margin-top:0; color:var(--main);">予定を登録</h3>
         
-        <label>担当メンバー</label>
-        <select id="in-mem">
-            <option value="A">メンバーA (赤)</option>
-            <option value="B">メンバーB (青)</option>
-            <option value="C">メンバーC (緑)</option>
-            <option value="D">メンバーD (橙)</option>
-            <option value="E">メンバーE (紫)</option>
-            <option value="F">メンバーF (桃)</option>
-        </select>
+        <label>参加メンバー (複数選択可)</label>
+        <div class="mem-selector">
+            <label class="mem-opt"><input type="checkbox" name="mem" value="A"> A (赤)</label>
+            <label class="mem-opt"><input type="checkbox" name="mem" value="B"> B (青)</label>
+            <label class="mem-opt"><input type="checkbox" name="mem" value="C"> C (緑)</label>
+            <label class="mem-opt"><input type="checkbox" name="mem" value="D"> D (橙)</label>
+            <label class="mem-opt"><input type="checkbox" name="mem" value="E"> E (紫)</label>
+            <label class="mem-opt"><input type="checkbox" name="mem" value="F"> F (桃)</label>
+        </div>
 
         <label>日付</label>
         <input type="date" id="in-date">
         
         <label>時間 (10分刻み)</label>
-        <div class="time-select-group">
+        <div style="display:flex; gap:5px; align-items:center; margin-bottom:12px;">
             <select id="in-hour" style="margin:0;"></select> 時
             <select id="in-min" style="margin:0;"></select> 分
         </div>
@@ -90,18 +94,17 @@
         </select>
         
         <label>内容 / 場所</label>
-        <input type="text" id="in-title" placeholder="内容（曲名など）">
-        <input type="text" id="in-loc" placeholder="場所（スタジオ・ホール）">
+        <input type="text" id="in-title" placeholder="内容">
+        <input type="text" id="in-loc" placeholder="場所">
         
-        <button class="save-btn" onclick="save()">スケジュールを保存</button>
+        <button class="save-btn" onclick="save()">保存する</button>
         <button onclick="openModal()" style="width:100%; background:none; border:none; color:#94a3b8; margin-top:15px;">閉じる</button>
     </div>
 </div>
 
 <script>
-    const STORAGE_KEY = 'team_gig_v7_10min';
+    const STORAGE_KEY = 'team_gig_multi_v1';
     
-    // 時間と分のセレクトボックスを生成
     const hourSel = document.getElementById('in-hour');
     for(let i=0; i<24; i++) hourSel.innerHTML += `<option value="${String(i).padStart(2,'0')}">${i}</option>`;
     const minSel = document.getElementById('in-min');
@@ -109,7 +112,11 @@
 
     function openModal() {
         const m = document.getElementById('modal');
-        m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        const isOpen = m.style.display === 'flex';
+        m.style.display = isOpen ? 'none' : 'flex';
+        if(!isOpen) {
+            document.querySelectorAll('input[name="mem"]').forEach(c => c.checked = false);
+        }
     }
 
     function save() {
@@ -117,13 +124,14 @@
         const t = document.getElementById('in-title').value;
         const hour = document.getElementById('in-hour').value;
         const min = document.getElementById('in-min').value;
-        const time = `${hour}:${min}`;
         const loc = document.getElementById('in-loc').value;
-        const mem = document.getElementById('in-mem').value;
+        const selectedMems = Array.from(document.querySelectorAll('input[name="mem"]:checked')).map(c => c.value);
+
         if(!d || !t) return alert("日付と内容は必須です");
+        if(selectedMems.length === 0) return alert("メンバーを1人以上選択してください");
         
         const tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        tasks.push({ d, t, time, loc, mem, cat: document.getElementById('in-cat').value, id: Date.now() });
+        tasks.push({ d, t, time:`${hour}:${min}`, loc, mems: selectedMems, cat: document.getElementById('in-cat').value, id: Date.now() });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
         
         openModal();
@@ -160,7 +168,7 @@
                         ${dayTasks.map(t => `
                             <div class="task-item">
                                 <div class="task-meta">
-                                    <span class="mem-tag mem-${t.mem}">${t.mem}</span>
+                                    ${t.mems.map(m => `<span class="mem-tag mem-${m}">${m}</span>`).join('')}
                                     <span class="cat-tag cat-${t.cat}">${t.cat}</span>
                                     <span class="task-time">${t.time}</span>
                                 </div>
