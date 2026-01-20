@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Schedule Pro</title>
+    <style>
+        :root { --main: #2563eb; --high: #ef4444; --bg: #f8fafc; --text: #1e293b; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; color: var(--text); }
+        header { background: white; padding: 15px 20px; position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        h1 { margin: 0; font-size: 1.1rem; }
+        .view-switch { background: #f1f5f9; padding: 4px; border-radius: 10px; display: flex; }
+        .view-switch button { border: none; padding: 6px 15px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; font-weight: bold; color: #64748b; background: none; }
+        .view-switch button.active { background: white; color: var(--main); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
+        #calendar-view { display: none; background: white; border-radius: 20px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .cal-day-label { text-align: center; font-size: 0.7rem; color: #94a3b8; font-weight: bold; padding-bottom: 5px; }
+        .cal-day { aspect-ratio: 1; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; position: relative; cursor: pointer; background: #f8fafc; }
+        .cal-day.today { background: #dbeafe; color: var(--main); font-weight: bold; }
+        .cal-day.has-task::after { content: ""; width: 4px; height: 4px; background: var(--main); border-radius: 50%; position: absolute; bottom: 6px; }
+        .cal-day.has-high::after { background: var(--high); width: 6px; height: 6px; }
+        .section-title { font-size: 0.85rem; font-weight: bold; color: #64748b; margin: 25px 0 10px 5px; }
+        .item { background: white; padding: 16px; border-radius: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border-left: 6px solid #cbd5e1; position: relative; }
+        .item.prio-high { border-left-color: var(--high); }
+        .tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 6px; background: #eff6ff; color: #1d4ed8; font-weight: bold; margin-bottom: 5px; display: inline-block; }
+        .title { font-size: 1rem; font-weight: bold; }
+        .date { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
+        .del-btn { position: absolute; right: 15px; top: 15px; background: #fee2e2; color: #ef4444; border: none; width: 28px; height: 28px; border-radius: 50%; font-size: 12px; }
+        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--main); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4); border: none; z-index: 20; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 30; align-items: center; justify-content: center; }
+        .modal-content { background: white; width: 85%; max-width: 400px; padding: 25px; border-radius: 24px; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; font-size: 16px; }
+        .save-btn { width: 100%; background: var(--main); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📅 My Schedule</h1>
+        <div class="view-switch">
+            <button id="btn-list" class="active" onclick="switchView('list')">リスト</button>
+            <button id="btn-cal" onclick="switchView('cal')">月間</button>
+        </div>
+    </header>
+    <div class="container">
+        <div id="list-view"><div id="urgent-list"></div><div id="normal-list"></div></div>
+        <div id="calendar-view">
+            <div class="cal-header"><span id="cal-month"></span></div>
+            <div class="cal-grid" id="cal-grid"></div>
+            <div id="cal-day-detail" style="margin-top:20px; border-top: 1px solid #eee;"></div>
+        </div>
+    </div>
+    <button class="fab" onclick="toggleModal()">＋</button>
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0">予定を追加</h3>
+            <input type="date" id="d">
+            <select id="cat"><option value="🎼 音楽">🎼 音楽</option><option value="⚔️ FF14">⚔️ FF14</option><option value="👤 個人">👤 個人</option></select>
+            <input type="text" id="t" placeholder="何をする？">
+            <select id="prio"><option value="normal">通常</option><option value="high">⚠️ 最優先</option></select>
+            <textarea id="memo" placeholder="メモ"></textarea>
+            <button class="save-btn" onclick="add()">保存する</button>
+            <button style="width:100%; background:none; border:none; color:#94a3b8; margin-top:10px;" onclick="toggleModal()">キャンセル</button>
+        </div>
+    </div>
+    <script>
+        let currentView = 'list';
+        const tasks_key = 'tasks_final';
+        function switchView(view) {
+            currentView = view;
+            document.getElementById('list-view').style.display = view === 'list' ? 'block' : 'none';
+            document.getElementById('calendar-view').style.display = view === 'cal' ? 'block' : 'none';
+            document.getElementById('btn-list').classList.toggle('active', view === 'list');
+            document.getElementById('btn-cal').classList.toggle('active', view === 'cal');
+            if(view === 'cal') renderCalendar();
+        }
+        function toggleModal() {
+            const m = document.getElementById('modal');
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        }
+        function add() {
+            const d = document.getElementById('d').value;
+            const t = document.getElementById('t').value;
+            if(!d || !t) return;
+            const tasks = JSON.parse(localStorage.getItem(tasks_key) || '[]');
+            tasks.push({ d, t, cat: document.getElementById('cat').value, prio: document.getElementById('prio').value, memo: document.getElementById('memo').value, id: Date.now() });
+            localStorage.setItem(tasks_key, JSON.stringify(tasks));
+            toggleModal();
+            render();
+            if(currentView === 'cal') renderCalendar();
+        }
+        function render() {
+            const tasks = JSON.parse(localStorage.getItem(tasks_key) || '[]');
+            tasks.sort((a,b) => new Date(a.d) - new Date(b.d));
+            const urgent = tasks.filter(t => t.prio === 'high');
+            const normal = tasks.filter(t => t.prio !== 'high');
+            const html = (list) => list.map(i => `<div class="item ${i.prio === 'high' ? 'prio-high' : ''}"><div class="tag">${i.cat}</div><div class="title">${i.t}</div><div class="date">${i.d}</div><button class="del-btn" onclick="del(${i.id})">✕</button></div>`).join('');
+            document.getElementById('urgent-list').innerHTML = urgent.length ? '<div class="section-title">🚨 最優先</div>' + html(urgent) : '';
+            document.getElementById('normal-list').innerHTML = '<div class="section-title">🗓 予定一覧</div>' + (normal.length ? html(normal) : '<p style="text-align:center; color:#94a3b8;">予定なし</p>');
+        }
+        function renderCalendar() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = now.getMonth();
+            document.getElementById('cal-month').innerText = `${y}年 ${m + 1}月`;
+            const first = new Date(y, m, 1).getDay();
+            const last = new Date(y, m + 1, 0).getDate();
+            const tasks = JSON.parse(localStorage.getItem(tasks_key) || '[]');
+            let grid = '<div class="cal-day-label">日</div><div class="cal-day-label">月</div><div class="cal-day-label">火</div><div class="cal-day-label">水</div><div class="cal-day-label">木</div><div class="cal-day-label">金</div><div class="cal-day-label">土</div>';
+            for (let i = 0; i < first; i++) grid += '<div></div>';
+            for (let d = 1; d <= last; d++) {
+                const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const dt = tasks.filter(t => t.d === ds);
+                const high = dt.some(t => t.prio === 'high');
+                grid += `<div class="cal-day ${ds === new Date().toISOString().split('T')[0] ? 'today' : ''} ${dt.length ? 'has-task' : ''} ${high ? 'has-high' : ''}" onclick="showDetail('${ds}')">${d}</div>`;
+            }
+            document.getElementById('cal-grid').innerHTML = grid;
+        }
+        function showDetail(ds) {
+            const dt = JSON.parse(localStorage.getItem(tasks_key) || '[]').filter(t => t.d === ds);
+            document.getElementById('cal-day-detail').innerHTML = `<div style="font-weight:bold; margin:15px 0;">${ds}</div>` + (dt.map(i => `<div>・[${i.cat}] ${i.t}</div>`).join('') || '予定なし');
+        }
+        function del(id) {
+            if(!confirm("削除しますか？")) return;
+            localStorage.setItem(tasks_key, JSON.stringify(JSON.parse(localStorage.getItem(tasks_key)).filter(t => t.id !== id)));
+            render();
+            if(currentView === 'cal') renderCalendar();
+        }
+        window.onload = render;
+    </script>
+</body>
+</html>
