@@ -59,7 +59,6 @@
         .task-time-row { font-size: 0.8rem; font-weight: bold; color: #3a3a3c; display: flex; align-items: center; }
         .task-loc { font-size: 0.75rem; color: #8e8e93; }
 
-        /* ボタン配置 */
         .fab-group { position: fixed; bottom: 25px; right: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 200; }
         .fab { width: 55px; height: 55px; background: var(--main); color: white; border-radius: 50%; font-size: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .fab-sync { background: var(--cal); font-size: 20px; }
@@ -203,15 +202,19 @@
                 <div class="task-side">
                     ${dayTasks.map(t => {
                         let segs = [];
-                        if(t.reheS && !t.reheS.includes("none") && t.reheS!=="") segs.push({l:'リハ', s:t.reheS, e:t.reheE, c:'リハ'});
-                        if(t.gpS && !t.gpS.includes("none") && t.gpS!=="") segs.push({l:'GP', s:t.gpS, e:t.gpE, c:'GP'});
-                        if(t.perfS && !t.perfS.includes("none") && t.perfS!=="") segs.push({l:'本番', s:t.perfS, e:t.perfE, c:'本番'});
+                        // ここの判定条件を修正（空文字チェックを追加）
+                        if(t.reheS && t.reheS!=="" && !t.reheS.includes("none")) segs.push({l:'リハ', s:t.reheS, e:t.reheE, c:'リハ'});
+                        if(t.gpS && t.gpS!=="" && !t.gpS.includes("none")) segs.push({l:'GP', s:t.gpS, e:t.gpE, c:'GP'});
+                        if(t.perfS && t.perfS!=="" && !t.perfS.includes("none")) segs.push({l:'本番', s:t.perfS, e:t.perfE, c:'本番'});
                         segs.sort((a,b) => a.s.localeCompare(b.s));
+
                         return `<div class="task-item" onclick="editModal('${t.id}')">
                             <div class="task-meta">${t.mems.map((n,i) => `<div class="member-unit"><span class="role-label ${getRoleClass(roles[i])}">${roles[i]||'Ex'}</span><span class="mem-tag mem-${n}">${n}</span></div>`).join('')}</div>
                             <span class="task-title">${t.t}</span>
-                            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;">${segs.map(s => `<div class="task-time-row"><span class="cat-tag cat-${s.c}">${s.l}</span>${s.s}-${s.e}</div>`).join('')}</div>
-                            ${t.loc && t.loc!=='undefined'?`<div class="task-loc">📍 ${t.loc}</div>`:''}
+                            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;">
+                                ${segs.map(s => `<div class="task-time-row"><span class="cat-tag cat-${s.c}">${s.l}</span>${s.s}-${s.e}</div>`).join('')}
+                            </div>
+                            ${t.loc && t.loc!=='undefined' && t.loc!=="" ?`<div class="task-loc">📍 ${t.loc}</div>`:''}
                         </div>`
                     }).join('') || '<span style="color:#ccc; font-size:0.75rem;">No Gigs</span>'}
                 </div></div>`;
@@ -220,13 +223,15 @@
     }
 
     function syncAllFuture() {
-        const now = new Date(); const today = now.toISOString().split('T')[0];
+        const now = new Date(); const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
         const future = allTasks.filter(t => t.d >= today).sort((a,b) => a.d.localeCompare(b.d));
-        if(!future.length) return alert("予定なし");
-        if(confirm(`${future.length}件をカレンダーに登録しますか？`)) {
+        if(!future.length) return alert("同期する今後の予定がありません。");
+        if(confirm(`${future.length}件の予定をGoogleカレンダーに登録します。1件ずつ登録画面が開きます。`)) {
             future.forEach((t, i) => setTimeout(() => {
                 const d = t.d.replace(/-/g,''); let s="090000", e="120000", times=[];
-                if(t.reheS) times.push({s:t.reheS, e:t.reheE}); if(t.gpS) times.push({s:t.gpS, e:t.gpE}); if(t.perfS) times.push({s:t.perfS, e:t.perfE});
+                if(t.reheS && t.reheS!=="" && !t.reheS.includes("none")) times.push({s:t.reheS, e:t.reheE});
+                if(t.gpS && t.gpS!=="" && !t.gpS.includes("none")) times.push({s:t.gpS, e:t.gpE});
+                if(t.perfS && t.perfS!=="" && !t.perfS.includes("none")) times.push({s:t.perfS, e:t.perfE});
                 if(times.length) { times.sort((a,b)=>a.s.localeCompare(b.s)); s=times[0].s.replace(':','')+"00"; e=times[times.length-1].e.replace(':','')+"00"; }
                 const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(t.t)}&dates=${d}T${s}/${d}T${e}&details=${encodeURIComponent('奏者: '+t.mems.join(', '))}&location=${encodeURIComponent(t.loc)}&sf=true&output=xml`;
                 window.open(url, '_blank');
@@ -234,17 +239,17 @@
         }
     }
 
+    // 他の補助関数群（switchTimeTab, clearTime, initTime, save, editModal, deleteTask, selectMem, updateChips, openModal, filterMems, showLoading, changeMonth, goToday, scrollToToday, window.onload）は前回と同じ
     function switchTimeTab(tab) {
         document.querySelectorAll('.time-tab, .time-input-group').forEach(el => el.classList.remove('active'));
         document.getElementById('tab-'+tab).classList.add('active'); document.getElementById('time-'+tab).classList.add('active');
     }
-
     function clearTime(p) { document.getElementById(`${p}-s-h`).value = "none"; document.getElementById(`${p}-e-h`).value = "none"; }
     function initTime(p) { document.getElementById(`${p}-s-h`).value = "12"; document.getElementById(`${p}-s-m`).value = "00"; document.getElementById(`${p}-e-h`).value = "12"; document.getElementById(`${p}-e-m`).value = "00"; }
 
     async function save() {
         const d = document.getElementById('in-date').value, t = document.getElementById('in-title').value;
-        if(!d || !t || !selectedOrder.length) return alert("入力不足");
+        if(!d || !t || !selectedOrder.length) return alert("入力内容に不足があります。");
         const getT = (p) => {
             const h = document.getElementById(`${p}-s-h`).value, eh = document.getElementById(`${p}-e-h`).value;
             return h==="none" ? ["",""] : [`${h}:${document.getElementById(p+'-s-m').value}`, `${eh}:${document.getElementById(p+'-e-m').value}`];
@@ -304,7 +309,7 @@
             const sh = document.getElementById(`${p}-s-h`), eh = document.getElementById(`${p}-e-h`), sm = document.getElementById(`${p}-s-m`), em = document.getElementById(`${p}-e-m`);
             sh.innerHTML = eh.innerHTML = '<option value="none">--</option>';
             for(let i=0; i<=23; i++) { const v = String(i).padStart(2,'0'); sh.innerHTML += `<option value="${v}">${i}</option>`; eh.innerHTML += `<option value="${v}">${i}</option>`; }
-            for(let i=0; i<60; i+=10) { const v = String(i).padStart(2,'0'); sm.innerHTML += `<option value="${v}">${v}</option>`; em.innerHTML += `<option value="${v}">${v}</option>`; }
+            for(let i=0; i<60; i+=10) { const v = String(i).padStart(2,'0'); sm.innerHTML += `<option value="${val=v}">${v}</option>`; em.innerHTML += `<option value="${val=v}">${v}</option>`; }
         });
         loadData();
     };
