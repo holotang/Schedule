@@ -3,59 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Music Schedule Pro</title>
+    <title>Team Gig Schedule</title>
     <style>
-        :root { --main: #2563eb; --reha: #10b981; --gp: #f59e0b; --honban: #ef4444; --bg: #f8fafc; }
+        :root { --main: #2563eb; --bg: #f1f5f9; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #1e293b; }
         
         header { background: white; padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
-        h1 { margin: 0; font-size: 1.1rem; color: var(--main); }
-        .month-label { font-weight: bold; }
+        h1 { margin: 0; font-size: 1.1rem; color: var(--main); font-weight: 900; }
 
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
 
         /* 縦型行レイアウト */
-        .day-row { background: white; border-radius: 16px; margin-bottom: 10px; display: flex; align-items: stretch; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); min-height: 80px; }
+        .day-row { background: white; border-radius: 16px; margin-bottom: 10px; display: flex; align-items: stretch; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); min-height: 90px; }
         .day-row.is-today { outline: 2px solid var(--main); }
         
         /* 日付部分 */
-        .date-side { width: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f1f5f9; border-right: 1px solid #e2e8f0; }
+        .date-side { width: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; border-right: 1px solid #e2e8f0; }
         .date-side.sun { color: #ef4444; }
         .date-side.sat { color: #2563eb; }
         .date-num { font-size: 1.4rem; font-weight: 800; }
         .date-day { font-size: 0.7rem; font-weight: bold; }
 
         /* 予定部分 */
-        .task-side { flex: 1; padding: 12px 15px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
-        .task-item { border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; position: relative; }
+        .task-side { flex: 1; padding: 12px 15px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+        .task-item { border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; position: relative; }
         .task-item:last-child { border: none; }
         
-        .task-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-        .cat-tag { font-size: 0.65rem; padding: 2px 8px; border-radius: 6px; color: white; font-weight: bold; }
-        .cat-リハ { background: var(--reha); }
-        .cat-GP { background: var(--gp); }
-        .cat-本番 { background: var(--honban); }
+        .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
         
+        /* カテゴリータグ */
+        .cat-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; }
+        .cat-リハ { background: #10b981; }
+        .cat-GP { background: #f59e0b; }
+        .cat-本番 { background: #ef4444; }
+        
+        /* メンバーカラータグ */
+        .mem-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; }
+        .mem-A { background: #e11d48; } /* 赤 */
+        .mem-B { background: #2563eb; } /* 青 */
+        .mem-C { background: #059669; } /* 緑 */
+        .mem-D { background: #d97706; } /* オレンジ */
+        .mem-E { background: #7c3aed; } /* 紫 */
+        .mem-F { background: #db2777; } /* ピンク */
+
         .task-time { font-size: 0.85rem; font-weight: bold; color: #475569; }
-        .task-title { font-size: 1rem; font-weight: bold; display: block; }
-        .task-loc { font-size: 0.8rem; color: #64748b; display: flex; align-items: center; gap: 4px; }
+        .task-title { font-size: 1rem; font-weight: bold; display: block; margin: 2px 0; }
+        .task-loc { font-size: 0.8rem; color: #64748b; }
 
         /* FAB */
-        .fab { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: var(--main); color: white; border: none; border-radius: 50%; font-size: 32px; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 200; }
+        .fab { position: fixed; bottom: 25px; right: 25px; width: 64px; height: 64px; background: var(--main); color: white; border: none; border-radius: 50%; font-size: 32px; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 200; }
 
         /* モーダル */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .modal-content { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 24px; max-height: 90vh; overflow-y: auto; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 16px; background: #f8fafc; box-sizing: border-box; }
-        label { font-size: 0.8rem; color: #64748b; margin-top: 10px; display: block; font-weight: bold; }
+        input, select { width: 100%; padding: 12px; margin: 6px 0 12px 0; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 16px; background: #f8fafc; box-sizing: border-box; }
+        label { font-size: 0.8rem; color: #64748b; font-weight: bold; }
         .save-btn { width: 100%; background: var(--main); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; margin-top: 20px; font-size: 1rem; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>🎼 Gig Schedule</h1>
-    <div class="month-label" id="month-label"></div>
+    <h1>🎼 Team Schedule</h1>
+    <div id="month-label" style="font-weight: bold;"></div>
 </header>
 
 <div class="container" id="calendar-container"></div>
@@ -66,11 +76,21 @@
     <div class="modal-content">
         <h3 style="margin-top:0; color:var(--main);">予定を登録</h3>
         
-        <label>日付</label>
-        <input type="date" id="in-date">
-        
-        <label>開始時間</label>
-        <input type="time" id="in-time">
+        <label>担当メンバー</label>
+        <select id="in-mem">
+            <option value="A">メンバーA (赤)</option>
+            <option value="B">メンバーB (青)</option>
+            <option value="C">メンバーC (緑)</option>
+            <option value="D">メンバーD (橙)</option>
+            <option value="E">メンバーE (紫)</option>
+            <option value="F">メンバーF (桃)</option>
+        </select>
+
+        <label>日付 / 時間</label>
+        <div style="display:flex; gap:10px;">
+            <input type="date" id="in-date" style="flex:2;">
+            <input type="time" id="in-time" style="flex:1;">
+        </div>
         
         <label>カテゴリー</label>
         <select id="in-cat">
@@ -79,19 +99,17 @@
             <option value="本番">本番</option>
         </select>
         
-        <label>内容</label>
-        <input type="text" id="in-title" placeholder="曲名や公演名">
+        <label>内容 / 場所</label>
+        <input type="text" id="in-title" placeholder="内容（曲名など）">
+        <input type="text" id="in-loc" placeholder="場所（スタジオ・ホール）">
         
-        <label>場所</label>
-        <input type="text" id="in-loc" placeholder="スタジオ名・ホール名">
-        
-        <button class="save-btn" onclick="save()">保存する</button>
-        <button onclick="openModal()" style="width:100%; background:none; border:none; color:#94a3b8; margin-top:15px;">キャンセル</button>
+        <button class="save-btn" onclick="save()">スケジュールを保存</button>
+        <button onclick="openModal()" style="width:100%; background:none; border:none; color:#94a3b8; margin-top:15px;">閉じる</button>
     </div>
 </div>
 
 <script>
-    const STORAGE_KEY = 'music_gig_v1';
+    const STORAGE_KEY = 'team_gig_v6';
     
     function openModal() {
         const m = document.getElementById('modal');
@@ -103,10 +121,11 @@
         const t = document.getElementById('in-title').value;
         const time = document.getElementById('in-time').value;
         const loc = document.getElementById('in-loc').value;
+        const mem = document.getElementById('in-mem').value;
         if(!d || !t) return alert("日付と内容は必須です");
         
         const tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        tasks.push({ d, t, time, loc, cat: document.getElementById('in-cat').value, id: Date.now() });
+        tasks.push({ d, t, time, loc, mem, cat: document.getElementById('in-cat').value, id: Date.now() });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
         
         openModal();
@@ -129,7 +148,6 @@
         for(let d=1; d<=lastDate; d++) {
             const dateObj = new Date(y, m, d);
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            // 時間順に並び替え
             const dayTasks = tasks.filter(t => t.d === dateStr).sort((a,b) => a.time.localeCompare(b.time));
             const dayIdx = dateObj.getDay();
             const isToday = dateStr === todayStr;
@@ -144,13 +162,14 @@
                         ${dayTasks.map(t => `
                             <div class="task-item">
                                 <div class="task-meta">
+                                    <span class="mem-tag mem-${t.mem}">${t.mem}</span>
                                     <span class="cat-tag cat-${t.cat}">${t.cat}</span>
                                     <span class="task-time">${t.time || '--:--'}</span>
                                 </div>
                                 <span class="task-title">${t.t}</span>
                                 ${t.loc ? `<div class="task-loc">📍 ${t.loc}</div>` : ''}
                             </div>
-                        `).join('') || '<span style="color:#cbd5e1; font-size:0.8rem;">No Gigs</span>'}
+                        `).join('') || '<span style="color:#cbd5e1; font-size:0.75rem;">No Schedule</span>'}
                     </div>
                 </div>
             `;
