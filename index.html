@@ -157,7 +157,7 @@
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzNv8hxvtL6kt2s4D65XmHYXnHvJbll7KQIoDa8CFtcfno-wj959MERsbiRQkQ7rj42iw/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwmZsLSh90S8cBqngtdMenDvfPiZh2AmiIch214vNLHPSYHlpG7pHnX3eZCeEj8vADsWA/exec"; 
     let allTasks = [], editingId = null, selectedOrder = [], currentFilter = 'ALL';
     const roles = ["1st", "2nd", "Bass", "Ex1", "Ex2"];
     let viewDate = new Date(); viewDate.setDate(1);
@@ -182,19 +182,16 @@
     function render() {
         const y = viewDate.getFullYear(), m = viewDate.getMonth() + 1;
         document.getElementById('head-month').innerText = `${y}年 ${m}月`;
-        const now = new Date(); 
-        const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        const now = new Date(); const todayComp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
         const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
         let html = '';
         const lastDay = new Date(y, m, 0).getDate();
-
         for(let d=1; d<=lastDay; d++) {
             const dateStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             let dayTasks = allTasks.filter(t => t.d.includes(dateStr));
             if(currentFilter !== 'ALL') dayTasks = dayTasks.filter(t => t.mems.includes(currentFilter));
             if(dayTasks.length === 0 && currentFilter !== 'ALL') continue;
-
-            html += `<div id="day-${d}" class="day-row ${dateStr === todayStr ? 'is-today' : ''}">
+            html += `<div id="day-${d}" class="day-row ${dateStr === todayComp ? 'is-today' : ''}">
                 <div class="date-side ${new Date(y,m-1,d).getDay()===0?'sun':new Date(y,m-1,d).getDay()===6?'sat':''}">
                     <span class="date-num">${d}</span><span class="date-day">${dayNames[new Date(y,m-1,d).getDay()]}</span>
                 </div>
@@ -205,25 +202,16 @@
                         if(t.gpS && t.gpS!=="" && !t.gpS.includes("none")) segs.push({l:'GP', s:t.gpS, e:t.gpE, c:'GP'});
                         if(t.perfS && t.perfS!=="" && !t.perfS.includes("none")) segs.push({l:'本番', s:t.perfS, e:t.perfE, c:'本番'});
                         segs.sort((a,b) => a.s.localeCompare(b.s));
-
                         return `<div class="task-item" onclick="editModal('${t.id}')">
                             <div class="task-meta">${t.mems.map((n,i) => `<div class="member-unit"><span class="role-label ${getRoleClass(roles[i])}">${roles[i]||'Ex'}</span><span class="mem-tag mem-${n}">${n}</span></div>`).join('')}</div>
                             <span class="task-title">${t.t}</span>
-                            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;">
-                                ${segs.map(s => `<div class="task-time-row"><span class="cat-tag cat-${s.c}">${s.l}</span>${s.s}-${s.e}</div>`).join('')}
-                            </div>
+                            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;">${segs.map(s => `<div class="task-time-row"><span class="cat-tag cat-${s.c}">${s.l}</span>${s.s}-${s.e}</div>`).join('')}</div>
                             ${t.loc && t.loc!=='undefined' && t.loc!=="" ?`<div class="task-loc">📍 ${t.loc}</div>`:''}
                         </div>`
                     }).join('') || '<span style="color:#ccc; font-size:0.75rem;">No Gigs</span>'}
                 </div></div>`;
         }
         document.getElementById('calendar-container').innerHTML = html;
-    }
-
-    function filterMems(m) {
-        currentFilter = m;
-        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === (m === 'ALL' ? '全員' : m)));
-        render();
     }
 
     function syncAllFuture() {
@@ -243,11 +231,8 @@
         }
     }
 
-    function switchTimeTab(tab) {
-        document.querySelectorAll('.time-tab, .time-input-group').forEach(el => el.classList.remove('active'));
-        document.getElementById('tab-'+tab).classList.add('active'); document.getElementById('time-'+tab).classList.add('active');
-    }
-
+    function filterMems(m) { currentFilter = m; document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', btn.innerText===(m==='ALL'?'全員':m))); render(); }
+    function switchTimeTab(tab) { document.querySelectorAll('.time-tab, .time-input-group').forEach(el => el.classList.remove('active')); document.getElementById('tab-'+tab).classList.add('active'); document.getElementById('time-'+tab).classList.add('active'); }
     function clearTime(p) { document.getElementById(`${p}-s-h`).value = "none"; document.getElementById(`${p}-e-h`).value = "none"; }
 
     async function save() {
