@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Team Schedule Sort Pro</title>
+    <title>Team Schedule Filter Pro</title>
     <style>
         :root { --main: #2563eb; --bg: #f1f5f9; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #1e293b; }
         header { background: white; padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 10px rgba(0,0,0,0.05); }
         h1 { margin: 0 0 10px 0; font-size: 1.1rem; color: var(--main); font-weight: 900; text-align: center; }
 
-        /* メンバーフィルター */
         .filter-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
         .filter-bar::-webkit-scrollbar { display: none; }
-        .filter-btn { flex: 0 0 auto; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; border: 2px solid #e2e8f0; background: white; color: #64748b; cursor: pointer; }
-        .filter-btn.active { border-color: var(--main); background: var(--main); color: white; }
+        .filter-btn { flex: 0 0 auto; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 2px solid #e2e8f0; background: white; color: #64748b; cursor: pointer; transition: all 0.2s; }
+        .filter-btn.active { border-color: var(--main); background: var(--main); color: white; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3); }
 
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
 
-        .day-row { background: white; border-radius: 16px; margin-bottom: 10px; display: flex; align-items: stretch; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); min-height: 95px; scroll-margin-top: 130px; }
-        .day-row.is-today { outline: 3px solid var(--main); background: #f0f7ff; }
+        .day-row { background: white; border-radius: 16px; margin-bottom: 10px; display: flex; align-items: stretch; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); min-height: 95px; scroll-margin-top: 130px; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        .date-side { width: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; border-right: 1px solid #e2e8f0; }
+        .day-row.is-today { outline: 3px solid var(--main); background: #f0f7ff; }
+        .date-side { width: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; border-right: 1px solid #e2e8f0; flex-shrink: 0; }
         .date-side.sun { color: #ef4444; }
         .date-side.sat { color: #2563eb; }
         .date-num { font-size: 1.4rem; font-weight: 800; }
@@ -51,27 +51,29 @@
         label { font-size: 0.8rem; color: #64748b; font-weight: bold; display: block; margin-top: 10px; }
         
         .mem-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 15px 0; }
-        .mem-opt { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; background: #f8fafc; padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; margin:0 !important; }
+        .mem-opt { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; background: #f8fafc; padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; margin:0 !important; cursor: pointer; }
         .time-group { display: flex; gap: 5px; align-items: center; }
         .time-group select { flex: 1; margin: 5px 0; }
 
         .btn-group { display: flex; gap: 10px; margin-top: 20px; }
         .save-btn { flex: 2; background: var(--main); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; font-size: 1rem; }
         .del-btn { flex: 1; background: #fee2e2; color: #ef4444; border: none; padding: 16px; border-radius: 12px; font-weight: bold; font-size: 0.9rem; display: none; }
+        
+        .empty-state { text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>🎼 Team Schedule Sort</h1>
+    <h1>🎼 Team Schedule Filter</h1>
     <div class="filter-bar" id="filter-bar">
-        <button class="filter-btn active" onclick="filterMems('ALL')">全員</button>
-        <button class="filter-btn" onclick="filterMems('A')">A</button>
-        <button class="filter-btn" onclick="filterMems('B')">B</button>
-        <button class="filter-btn" onclick="filterMems('C')">C</button>
-        <button class="filter-btn" onclick="filterMems('D')">D</button>
-        <button class="filter-btn" onclick="filterMems('E')">E</button>
-        <button class="filter-btn" onclick="filterMems('F')">F</button>
+        <button class="filter-btn active" onclick="filterMems('ALL')">全員表示</button>
+        <button class="filter-btn" onclick="filterMems('A')">Aさんの日</button>
+        <button class="filter-btn" onclick="filterMems('B')">Bさんの日</button>
+        <button class="filter-btn" onclick="filterMems('C')">Cさんの日</button>
+        <button class="filter-btn" onclick="filterMems('D')">Dさんの日</button>
+        <button class="filter-btn" onclick="filterMems('E')">Eさんの日</button>
+        <button class="filter-btn" onclick="filterMems('F')">Fさんの日</button>
     </div>
 </header>
 
@@ -81,7 +83,7 @@
 
 <div class="modal" id="modal">
     <div class="modal-content">
-        <h3 id="modal-title" style="margin-top:0; color:var(--main);">予定を登録</h3>
+        <h3 id="modal-title" style="margin-top:0; color:var(--main);">予定登録</h3>
         <label>参加メンバー</label>
         <div class="mem-selector">
             <label class="mem-opt"><input type="checkbox" name="mem" value="A"> A (赤)</label>
@@ -94,9 +96,7 @@
         <label>日付</label><input type="date" id="in-date">
         <label>時間</label>
         <div class="time-group">
-            <select id="start-h"></select>:<select id="start-m"></select>
-            〜
-            <select id="end-h"></select>:<select id="end-m"></select>
+            <select id="start-h"></select>:<select id="start-m"></select> 〜 <select id="end-h"></select>:<select id="end-m"></select>
         </div>
         <label>カテゴリー</label><select id="in-cat"><option value="リハ">リハ</option><option value="GP">GP</option><option value="本番">本番</option></select>
         <input type="text" id="in-title" placeholder="内容"><input type="text" id="in-loc" placeholder="場所">
@@ -106,7 +106,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'team_gig_sort_v1';
+    const STORAGE_KEY = 'team_gig_filter_v2';
     let editingId = null;
     let currentFilter = 'ALL';
     
@@ -126,7 +126,8 @@
     function filterMems(mem) {
         currentFilter = mem;
         document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.innerText === (mem === 'ALL' ? '全員' : mem));
+            const label = mem === 'ALL' ? '全員表示' : mem + 'さんの日';
+            btn.classList.toggle('active', btn.innerText === label);
         });
         render();
     }
@@ -137,7 +138,7 @@
         m.style.display = isOpen ? 'none' : 'flex';
         if(!isOpen) {
             editingId = taskId;
-            document.getElementById('modal-title').innerText = taskId ? "予定を編集" : "予定を登録";
+            document.getElementById('modal-title').innerText = taskId ? "予定編集" : "予定登録";
             document.getElementById('delete-btn').style.display = taskId ? "block" : "none";
             if(taskId) {
                 const task = JSON.parse(localStorage.getItem(STORAGE_KEY)).find(t => t.id === taskId);
@@ -181,22 +182,27 @@
         const now = new Date(); const y = now.getFullYear(); const m = now.getMonth();
         const tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         const todayStr = now.toISOString().split('T')[0];
+        const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
         
         let html = '';
-        const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+        let hasVisibleTasks = false;
 
         for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
             const dateObj = new Date(y, m, d);
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             let dayTasks = tasks.filter(t => t.d === dateStr);
             
-            // フィルタリング処理
+            // 重要：フィルタリングロジック
             if(currentFilter !== 'ALL') {
                 dayTasks = dayTasks.filter(t => t.mems.includes(currentFilter));
+                // 参加予定がない日はスキップ（非表示）
+                if(dayTasks.length === 0) continue;
             }
-            dayTasks.sort((a,b) => a.sTime.localeCompare(b.sTime));
 
+            hasVisibleTasks = true;
+            dayTasks.sort((a,b) => a.sTime.localeCompare(b.sTime));
             const isToday = dateStr === todayStr;
+
             html += `
                 <div id="day-${d}" class="day-row ${isToday ? 'is-today' : ''}">
                     <div class="date-side ${dateObj.getDay() === 0 ? 'sun' : (dateObj.getDay() === 6 ? 'sat' : '')}">
@@ -217,9 +223,16 @@
                     </div>
                 </div>`;
         }
+
+        if(!hasVisibleTasks && currentFilter !== 'ALL') {
+            html = `<div class="empty-state">${currentFilter}さんの予定は今月ありません</div>`;
+        }
+
         document.getElementById('calendar-container').innerHTML = html;
+        
+        // 全員表示の時のみ今日へスクロール
         if(currentFilter === 'ALL' && document.getElementById(`day-${now.getDate()}`)) {
-            setTimeout(() => { document.getElementById(`day-${now.getDate()}`).scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 500);
+            setTimeout(() => { document.getElementById(`day-${now.getDate()}`).scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
         }
     }
 
