@@ -3,52 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Vertical Calendar</title>
+    <title>Music Schedule Pro</title>
     <style>
-        :root { --main: #007bff; --high: #ff4d4d; --bg: #f0f2f5; --card: #ffffff; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #333; }
+        :root { --main: #2563eb; --reha: #10b981; --gp: #f59e0b; --honban: #ef4444; --bg: #f8fafc; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #1e293b; }
         
-        /* ヘッダー */
-        header { background: white; padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        header { background: white; padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
         h1 { margin: 0; font-size: 1.1rem; color: var(--main); }
-        .month-label { font-weight: bold; font-size: 1rem; color: #555; }
+        .month-label { font-weight: bold; }
 
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
 
-        /* 縦型カレンダー・レイアウト */
-        .day-row { background: var(--card); border-radius: 15px; margin-bottom: 8px; display: flex; align-items: stretch; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); min-height: 70px; }
+        /* 縦型行レイアウト */
+        .day-row { background: white; border-radius: 16px; margin-bottom: 10px; display: flex; align-items: stretch; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); min-height: 80px; }
         .day-row.is-today { outline: 2px solid var(--main); }
         
-        /* 左側の日付ブロック */
-        .date-side { width: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; border-right: 1px solid #eee; }
+        /* 日付部分 */
+        .date-side { width: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f1f5f9; border-right: 1px solid #e2e8f0; }
         .date-side.sun { color: #ef4444; }
         .date-side.sat { color: #2563eb; }
-        .date-num { font-size: 1.3rem; font-weight: 800; line-height: 1; }
-        .date-day { font-size: 0.7rem; font-weight: bold; margin-top: 2px; }
+        .date-num { font-size: 1.4rem; font-weight: 800; }
+        .date-day { font-size: 0.7rem; font-weight: bold; }
 
-        /* 右側の予定ブロック */
-        .task-side { flex: 1; padding: 10px 15px; display: flex; flex-direction: column; justify-content: center; gap: 5px; position: relative; }
-        .task-side.has-high { border-left: 5px solid var(--high); }
+        /* 予定部分 */
+        .task-side { flex: 1; padding: 12px 15px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+        .task-item { border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; position: relative; }
+        .task-item:last-child { border: none; }
         
-        .task-item { font-size: 0.95rem; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-        .cat-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background: #eef2ff; color: #4f46e5; font-weight: normal; border: 1px solid #e0e7ff; }
-        .high-mark { color: var(--high); font-size: 0.8rem; }
-        .no-task { color: #ccc; font-size: 0.8rem; font-style: italic; }
+        .task-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .cat-tag { font-size: 0.65rem; padding: 2px 8px; border-radius: 6px; color: white; font-weight: bold; }
+        .cat-リハ { background: var(--reha); }
+        .cat-GP { background: var(--gp); }
+        .cat-本番 { background: var(--honban); }
+        
+        .task-time { font-size: 0.85rem; font-weight: bold; color: #475569; }
+        .task-title { font-size: 1rem; font-weight: bold; display: block; }
+        .task-loc { font-size: 0.8rem; color: #64748b; display: flex; align-items: center; gap: 4px; }
 
-        /* 追加ボタン (FAB) */
-        .fab { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: var(--main); color: white; border: none; border-radius: 50%; font-size: 32px; box-shadow: 0 4px 15px rgba(0,123,255,0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 200; }
+        /* FAB */
+        .fab { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: var(--main); color: white; border: none; border-radius: 50%; font-size: 32px; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 200; }
 
-        /* 入力モーダル */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
-        .modal-content { background: white; width: 85%; max-width: 400px; padding: 25px; border-radius: 25px; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; font-size: 16px; background: #f9f9f9; }
-        .save-btn { width: 100%; background: var(--main); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; margin-top: 10px; font-size: 1rem; }
+        /* モーダル */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-content { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 24px; max-height: 90vh; overflow-y: auto; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 16px; background: #f8fafc; box-sizing: border-box; }
+        label { font-size: 0.8rem; color: #64748b; margin-top: 10px; display: block; font-weight: bold; }
+        .save-btn { width: 100%; background: var(--main); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; margin-top: 20px; font-size: 1rem; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>📅 Smart Cal</h1>
+    <h1>🎼 Gig Schedule</h1>
     <div class="month-label" id="month-label"></div>
 </header>
 
@@ -58,31 +64,34 @@
 
 <div class="modal" id="modal">
     <div class="modal-content">
-        <h3 style="margin-top:0; color:var(--main);">予定を追加</h3>
-        <label style="font-size:0.8rem; color:#888;">日付</label>
+        <h3 style="margin-top:0; color:var(--main);">予定を登録</h3>
+        
+        <label>日付</label>
         <input type="date" id="in-date">
         
-        <label style="font-size:0.8rem; color:#888;">カテゴリー</label>
+        <label>開始時間</label>
+        <input type="time" id="in-time">
+        
+        <label>カテゴリー</label>
         <select id="in-cat">
-            <option value="🎼 音楽">🎼 音楽制作</option>
-            <option value="⚔️ FF14">⚔️ FF14</option>
-            <option value="👤 個人">👤 個人</option>
+            <option value="リハ">リハ</option>
+            <option value="GP">GP</option>
+            <option value="本番">本番</option>
         </select>
         
-        <input type="text" id="in-title" placeholder="何をする？">
+        <label>内容</label>
+        <input type="text" id="in-title" placeholder="曲名や公演名">
         
-        <select id="in-prio">
-            <option value="normal">優先度：通常</option>
-            <option value="high">優先度：最優先事項 ⚠️</option>
-        </select>
+        <label>場所</label>
+        <input type="text" id="in-loc" placeholder="スタジオ名・ホール名">
         
         <button class="save-btn" onclick="save()">保存する</button>
-        <button onclick="openModal()" style="width:100%; background:none; border:none; color:#aaa; margin-top:15px; font-size:0.9rem;">キャンセル</button>
+        <button onclick="openModal()" style="width:100%; background:none; border:none; color:#94a3b8; margin-top:15px;">キャンセル</button>
     </div>
 </div>
 
 <script>
-    const STORAGE_KEY = 'v_cal_data_v1';
+    const STORAGE_KEY = 'music_gig_v1';
     
     function openModal() {
         const m = document.getElementById('modal');
@@ -92,10 +101,12 @@
     function save() {
         const d = document.getElementById('in-date').value;
         const t = document.getElementById('in-title').value;
-        if(!d || !t) return alert("日付と内容を入れてね");
+        const time = document.getElementById('in-time').value;
+        const loc = document.getElementById('in-loc').value;
+        if(!d || !t) return alert("日付と内容は必須です");
         
         const tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        tasks.push({ d, t, cat: document.getElementById('in-cat').value, prio: document.getElementById('in-prio').value, id: Date.now() });
+        tasks.push({ d, t, time, loc, cat: document.getElementById('in-cat').value, id: Date.now() });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
         
         openModal();
@@ -118,10 +129,10 @@
         for(let d=1; d<=lastDate; d++) {
             const dateObj = new Date(y, m, d);
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const dayTasks = tasks.filter(t => t.d === dateStr);
+            // 時間順に並び替え
+            const dayTasks = tasks.filter(t => t.d === dateStr).sort((a,b) => a.time.localeCompare(b.time));
             const dayIdx = dateObj.getDay();
             const isToday = dateStr === todayStr;
-            const hasHigh = dayTasks.some(t => t.prio === 'high');
 
             html += `
                 <div class="day-row ${isToday ? 'is-today' : ''}" onclick="dayAction('${dateStr}')">
@@ -129,14 +140,17 @@
                         <span class="date-num">${d}</span>
                         <span class="date-day">${dayNames[dayIdx]}</span>
                     </div>
-                    <div class="task-side ${hasHigh ? 'has-high' : ''}">
+                    <div class="task-side">
                         ${dayTasks.map(t => `
-                            <div class="task-item ${t.prio === 'high' ? 'high' : ''}">
-                                ${t.prio === 'high' ? '<span class="high-mark">⚠️</span>' : ''}
-                                <span class="cat-tag">${t.cat}</span>
-                                <span>${t.t}</span>
+                            <div class="task-item">
+                                <div class="task-meta">
+                                    <span class="cat-tag cat-${t.cat}">${t.cat}</span>
+                                    <span class="task-time">${t.time || '--:--'}</span>
+                                </div>
+                                <span class="task-title">${t.t}</span>
+                                ${t.loc ? `<div class="task-loc">📍 ${t.loc}</div>` : ''}
                             </div>
-                        `).join('') || '<span class="no-task">No Schedule</span>'}
+                        `).join('') || '<span style="color:#cbd5e1; font-size:0.8rem;">No Gigs</span>'}
                     </div>
                 </div>
             `;
