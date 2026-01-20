@@ -41,12 +41,20 @@
         .mem-tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 6px; color: white; font-weight: bold; }
         
         /* 奏者ごとのカラー設定 */
-        .mem-辻󠄀 { background: #ff3b30; }   /* 赤 */
-        .mem-中西 { background: #007aff; }  /* 青 */
-        .mem-五箇 { background: #34c759; }  /* 緑 */
-        .mem-山内 { background: #ff9500; }  /* オレンジ */
-        .mem-藤田 { background: #af52de; }  /* 紫 */
-        .mem-石川 { background: #5856d6; }  /* 藍 */
+        .mem-辻󠄀, .chip-辻󠄀.selected { background: #ff3b30 !important; color: white !important; }
+        .mem-中西, .chip-中西.selected { background: #007aff !important; color: white !important; }
+        .mem-五箇, .chip-五箇.selected { background: #34c759 !important; color: white !important; }
+        .mem-山内, .chip-山内.selected { background: #ff9500 !important; color: white !important; }
+        .mem-藤田, .chip-藤田.selected { background: #af52de !important; color: white !important; }
+        .mem-石川, .chip-石川.selected { background: #5856d6 !important; color: white !important; }
+        .mem-Ex1, .chip-Ex1.selected { background: #8e8e93 !important; color: white !important; }
+        .mem-Ex2, .chip-Ex2.selected { background: #545456 !important; color: white !important; }
+
+        /* 番手（Role）ごとのバッジカラー */
+        .role-1st { background: #ff3b30; }
+        .role-2nd { background: #007aff; }
+        .role-Bass { background: #34c759; }
+        .role-Ex { background: #8e8e93; }
 
         .cat-tag { font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; }
         .cat-リハ { background: #8e8e93; } .cat-GP { background: #d4af37; } .cat-本番 { background: #000; }
@@ -59,10 +67,11 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-content { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; max-height: 85vh; overflow-y: auto; }
         .mem-selector { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 10px 0; }
-        .mem-chip { padding: 10px; border-radius: 10px; border: 2px solid #e5e5ea; background: #f9f9fb; text-align: center; position: relative; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
-        .mem-chip.selected { border-color: var(--main); background: #eee; }
-        .order-badge { position: absolute; top: -5px; right: -5px; background: var(--accent); color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; display: none; align-items: center; justify-content: center; }
+        .mem-chip { padding: 10px; border-radius: 10px; border: 2px solid #e5e5ea; background: #f9f9fb; text-align: center; position: relative; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .mem-chip.selected { border-color: transparent; }
+        .order-badge { position: absolute; top: -8px; right: -8px; color: white; border-radius: 6px; padding: 2px 6px; font-size: 9px; display: none; align-items: center; justify-content: center; font-weight: 900; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10; border: 1px solid white; }
         .mem-chip.selected .order-badge { display: flex; }
+        
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #e5e5ea; border-radius: 10px; box-sizing: border-box; }
         .save-btn { width: 100%; background: var(--main); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; margin-top: 10px; }
         .del-btn { background: #fff0f0; color: #ff3b30; margin-top: 8px; width: 100%; padding: 10px; border: none; border-radius: 10px; display: none; }
@@ -93,6 +102,8 @@
         <button class="filter-btn" onclick="filterMems('山内')">山内</button>
         <button class="filter-btn" onclick="filterMems('藤田')">藤田</button>
         <button class="filter-btn" onclick="filterMems('石川')">石川</button>
+        <button class="filter-btn" onclick="filterMems('Ex1')">Ex1</button>
+        <button class="filter-btn" onclick="filterMems('Ex2')">Ex2</button>
     </div>
 </header>
 
@@ -104,12 +115,14 @@
         <h3 id="modal-title" style="margin-top:0;">スケジュール登録</h3>
         <label style="font-size:0.7rem; color:#888;">吹く番の順に選択 (1st→2nd→Bass...)</label>
         <div class="mem-selector">
-            <div class="mem-chip" onclick="selectMem('辻󠄀')" id="chip-辻󠄀">辻󠄀<div class="order-badge"></div></div>
-            <div class="mem-chip" onclick="selectMem('中西')" id="chip-中西">中西<div class="order-badge"></div></div>
-            <div class="mem-chip" onclick="selectMem('五箇')" id="chip-五箇">五箇<div class="order-badge"></div></div>
-            <div class="mem-chip" onclick="selectMem('山内')" id="chip-山内">山内<div class="order-badge"></div></div>
-            <div class="mem-chip" onclick="selectMem('藤田')" id="chip-藤田">藤田<div class="order-badge"></div></div>
-            <div class="mem-chip" onclick="selectMem('石川')" id="chip-石川">石川<div class="order-badge"></div></div>
+            <div class="mem-chip chip-辻󠄀" onclick="selectMem('辻󠄀')" id="chip-辻󠄀">辻󠄀<div class="order-badge"></div></div>
+            <div class="mem-chip chip-中西" onclick="selectMem('中西')" id="chip-中西">中西<div class="order-badge"></div></div>
+            <div class="mem-chip chip-五箇" onclick="selectMem('五箇')" id="chip-五箇">五箇<div class="order-badge"></div></div>
+            <div class="mem-chip chip-山内" onclick="selectMem('山内')" id="chip-山内">山内<div class="order-badge"></div></div>
+            <div class="mem-chip chip-藤田" onclick="selectMem('藤田')" id="chip-藤田">藤田<div class="order-badge"></div></div>
+            <div class="mem-chip chip-石川" onclick="selectMem('石川')" id="chip-石川">石川<div class="order-badge"></div></div>
+            <div class="mem-chip chip-Ex1" onclick="selectMem('Ex1')" id="chip-Ex1">Ex1<div class="order-badge"></div></div>
+            <div class="mem-chip chip-Ex2" onclick="selectMem('Ex2')" id="chip-Ex2">Ex2<div class="order-badge"></div></div>
         </div>
         <input type="date" id="in-date">
         <div style="display:flex; gap:5px;"><select id="start-h"></select>:<select id="start-m"></select> 〜 <select id="end-h"></select>:<select id="end-m"></select></div>
@@ -126,13 +139,12 @@
 
     let editingId = null;
     let selectedOrder = [];
-    const roles = ["1st", "2nd", "Bass", "Ex1", "Ex2", "Ex3"];
+    const roles = ["1st", "2nd", "Bass", "Ex1", "Ex2", "Ex3", "Ex4", "Ex5"];
     let allTasks = [];
     let currentFilter = 'ALL';
     
-    // 表示中の年月を管理
     let viewDate = new Date();
-    viewDate.setDate(1); // 1日に固定
+    viewDate.setDate(1);
 
     async function loadData() {
         showLoading(true);
@@ -212,7 +224,6 @@
         document.getElementById('calendar-container').innerHTML = html;
     }
 
-    // --- 以下、既存の保存・モーダル等のロジック ---
     async function save() {
         const d = document.getElementById('in-date').value;
         const t = document.getElementById('in-title').value;
@@ -277,7 +288,18 @@
             const m = chip.id.replace('chip-', '');
             const i = selectedOrder.indexOf(m);
             const badge = chip.querySelector('.order-badge');
-            if(i > -1) { chip.classList.add('selected'); badge.innerText = roles[i] || 'Ex'; badge.style.display='flex'; }
+            if(i > -1) { 
+                chip.classList.add('selected'); 
+                const roleName = roles[i] || 'Ex';
+                badge.innerText = roleName;
+                badge.style.display='flex';
+                // 役割に応じたバッジの色を設定
+                badge.className = 'order-badge';
+                if(roleName === '1st') badge.classList.add('role-1st');
+                else if(roleName === '2nd') badge.classList.add('role-2nd');
+                else if(roleName === 'Bass') badge.classList.add('role-Bass');
+                else badge.classList.add('role-Ex');
+            }
             else { chip.classList.remove('selected'); badge.style.display='none'; }
         });
     }
