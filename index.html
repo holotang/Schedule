@@ -8,7 +8,7 @@
         :root { --main: #1a1a1a; --bg: #f2f2f7; --accent: #d4af37; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #1c1c1e; }
         header { background: #fff; padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 10px rgba(0,0,0,0.1); }
-        h1 { margin: 0 0 12px 0; font-size: 1rem; color: var(--main); font-weight: 900; text-align: center; }
+        h1 { margin: 0 0 12px 0; font-size: 0.9rem; color: var(--main); font-weight: 900; text-align: center; }
 
         .filter-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
         .filter-bar::-webkit-scrollbar { display: none; }
@@ -54,12 +54,12 @@
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #e5e5ea; border-radius: 10px; box-sizing: border-box; }
         .save-btn { width: 100%; background: var(--main); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; margin-top: 10px; }
         .del-btn { background: #fff0f0; color: #ff3b30; margin-top: 8px; width: 100%; padding: 10px; border: none; border-radius: 10px; display: none; }
-        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; items-center; justify-content: center; z-index: 1000; font-weight: bold; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div id="loading" class="loading-overlay" style="display:flex;">同期中...</div>
+<div id="loading" class="loading-overlay">同期中...</div>
 
 <header>
     <h1>東京フィルトロンボーンセクション</h1>
@@ -74,7 +74,7 @@
     </div>
 </header>
 
-<div class="container" id="calendar-container"></div>
+<div class="container" id="calendar-container">読み込み中...</div>
 <button class="fab" onclick="openModal()">＋</button>
 
 <div class="modal" id="modal">
@@ -100,18 +100,39 @@
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwgP5K1Qo8l4YbvoNqymyPp21CUGnzY-lmbDwnsbR5UStyAOWqJnrAMtX8SYDFfHehtPQ/exec";
+    // ※ここにあなたのGoogle Apps ScriptのURLを貼ってください
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwgP5K1Qo8l4YbvoNqymyPp21CUGnzY-lmbDwnsbR5UStyAOWqJnrAMtX8SYDFfHehtPQ/exec"; 
+
     let editingId = null;
     let selectedOrder = [];
     const roles = ["1st", "2nd", "Bass", "Ex1", "Ex2", "Ex3"];
     let allTasks = [];
     let currentFilter = 'ALL';
 
+    async function loadData() {
+        showLoading(true);
+        try {
+            const res = await fetch(GAS_URL);
+            const raw = await res.json();
+            allTasks = raw.map(t => ({ 
+                d: t[0], t: t[1], sTime: t[2], eTime: t[3], 
+                loc: t[4], mems: String(t[5]).split(','), id: t[6], cat: t[7] 
+            }));
+            render();
+        } catch (e) {
+            document.getElementById('calendar-container').innerHTML = "データ取得エラー。URLとデプロイ設定を確認してください。";
+        }
+        showLoading(false);
+    }
+
     async function save() {
+        const d = document.getElementById('in-date').value;
+        const t = document.getElementById('in-title').value;
+        if(!d || !t || selectedOrder.length === 0) return alert("入力内容が足りません");
+
         showLoading(true);
         const data = {
-            d: document.getElementById('in-date').value,
-            t: document.getElementById('in-title').value,
+            d: d, t: t,
             sTime: `${document.getElementById('start-h').value}:${document.getElementById('start-m').value}`,
             eTime: `${document.getElementById('end-h').value}:${document.getElementById('end-m').value}`,
             loc: document.getElementById('in-loc').value,
@@ -120,6 +141,7 @@
             id: editingId || Date.now(),
             method: editingId ? "UPDATE" : "POST"
         };
+
         await fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) });
         openModal();
         await loadData();
@@ -131,15 +153,6 @@
         await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ method: "DELETE", id: editingId }) });
         openModal();
         await loadData();
-    }
-
-    async function loadData() {
-        showLoading(true);
-        const res = await fetch(GAS_URL);
-        const raw = await res.json();
-        allTasks = raw.map(t => ({ d:t[0], t:t[1], sTime:t[2], eTime:t[3], loc:t[4], mems:t[5].split(','), id:t[6], cat:t[7] }));
-        render();
-        showLoading(false);
     }
 
     function render() {
