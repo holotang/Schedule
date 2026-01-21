@@ -91,7 +91,7 @@
 <div class="container" id="calendar-container"></div>
 <div class="fab-group">
     <button class="fab fab-sync" onclick="syncAllFuture()" title="今日以降をカレンダーに登録">⚡️</button>
-    <button class="fab" onclick="handleAuthOpen()">＋</button>
+    <button class="fab" onclick="openModal()">＋</button>
 </div>
 <div class="modal" id="modal">
     <div class="modal-content">
@@ -145,14 +145,9 @@
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwIcN_FbqqskoucE9Y4S5OaHnfD5Xf_Q455bAyBYIDYaIQmea-hnNqIFGV9d0YCj_VS9w/exec"; 
     
-    // --- 編集用パスワード ---
+    // --- 編集・削除用パスワード ---
     const EDIT_PASSWORD = "22";
     let isAuthorized = false;
-
-    let allTasks = [], editingId = null, selectedOrder = [], currentFilter = 'ALL';
-    const roles = ["1st", "2nd", "Bass", "Ex1", "Ex2"];
-    let viewDate = new Date(); viewDate.setDate(1);
-    const getRoleClass = (r) => (r === '1st' ? 'role-1st-bg' : r === '2nd' ? 'role-2nd-bg' : r === 'Bass' ? 'role-Bass-bg' : 'role-Ex-bg');
 
     // パスワードチェック関数
     function checkAuth() {
@@ -162,20 +157,14 @@
             isAuthorized = true;
             return true;
         }
-        alert("パスワードが違います。閲覧のみ可能です。");
+        alert("パスワードが違います。");
         return false;
     }
 
-    // ＋ボタンまたは編集時の認証ハンドラ
-    function handleAuthOpen(id = null) {
-        if (checkAuth()) {
-            if (id) {
-                editModal(id);
-            } else {
-                openModal();
-            }
-        }
-    }
+    let allTasks = [], editingId = null, selectedOrder = [], currentFilter = 'ALL';
+    const roles = ["1st", "2nd", "Bass", "Ex1", "Ex2"];
+    let viewDate = new Date(); viewDate.setDate(1);
+    const getRoleClass = (r) => (r === '1st' ? 'role-1st-bg' : r === '2nd' ? 'role-2nd-bg' : r === 'Bass' ? 'role-Bass-bg' : 'role-Ex-bg');
 
     async function loadData() {
         showLoading(true);
@@ -216,7 +205,7 @@
                         if(t.gpS && t.gpS!=="" && !t.gpS.includes("none")) segs.push({l:'GP', s:t.gpS, e:t.gpE, c:'GP'});
                         if(t.perfS && t.perfS!=="" && !t.perfS.includes("none")) segs.push({l:'本番', s:t.perfS, e:t.perfE, c:'本番'});
                         segs.sort((a,b) => a.s.localeCompare(b.s));
-                        return `<div class="task-item" onclick="handleAuthOpen('${t.id}')">
+                        return `<div class="task-item" onclick="editModal('${t.id}')">
                             <div class="task-meta">${t.mems.map((n,i) => {
                                 let displayName = n;
                                 if(n==='Ex1' && t.ex1Name) displayName = t.ex1Name;
@@ -235,6 +224,9 @@
     }
 
     async function save() {
+        // 更新（編集）の場合のみパスワードを求める
+        if (editingId && !checkAuth()) return;
+
         const d = document.getElementById('in-date').value, t = document.getElementById('in-title').value;
         if(!d || !t || !selectedOrder.length) return alert("入力不足です。");
         const getT = (p) => {
@@ -306,7 +298,15 @@
     function changeMonth(d) { viewDate.setMonth(viewDate.getMonth() + d); render(); window.scrollTo(0,0); }
     function goToday() { viewDate = new Date(); viewDate.setDate(1); render(); setTimeout(scrollToToday, 100); }
     function scrollToToday() { const now = new Date(); const el = document.getElementById(`day-${now.getDate()}`); if(el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-    async function deleteTask() { if(!confirm("削除しますか？")) return; showLoading(true); await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ method: "DELETE", id: editingId }) }); closeModalOnly(); setTimeout(loadData, 1500); }
+    
+    async function deleteTask() { 
+        if (!checkAuth()) return; // 削除には必ずパスワードを求める
+        if(!confirm("削除しますか？")) return; 
+        showLoading(true); 
+        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ method: "DELETE", id: editingId }) }); 
+        closeModalOnly(); setTimeout(loadData, 1500); 
+    }
+
     function updateChips() { document.querySelectorAll('.mem-chip').forEach(chip => { const m = chip.id.replace('chip-', ''), i = selectedOrder.indexOf(m), b = chip.querySelector('.order-badge'); if(i > -1) { chip.classList.add('selected'); b.innerText = roles[i]||'Ex'; b.className = 'order-badge '+getRoleClass(roles[i]); b.style.display='flex'; } else { chip.classList.remove('selected'); b.style.display='none'; } }); }
     
     function openModal() {
